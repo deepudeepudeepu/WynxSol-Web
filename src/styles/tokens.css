@@ -1,0 +1,88 @@
+/* ============================================================================
+   WYNXSOL DESIGN TOKENS — GRAIL PALETTE + SANTALARCH ARCHITECTURAL PRECISION
+   Exact Palette:
+     Black:      #000000
+     White:      #FFFFFF
+     Soft Pink:  #FFCDFF
+     Off-White:  #F6F6F6
+   ============================================================================ */
+
+@font-face {
+  font-family: 'PP Pangaia';
+  src: local('PP Pangaia Light'), local('PPPangaia-Light');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PP Pangaia';
+  src: local('PP Pangaia Regular'), local('PPPangaia-Regular');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PP Pangaia';
+  src: local('PP Pangaia Medium'), local('PPPangaia-Medium');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --font-display: 'PP Pangaia', 'Cormorant Garamond', 'Instrument Serif', Georgia, serif;
+  --font-sans: 'Switzer', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Exact Colours */
+  --bg-black: #000000;
+  --bg-elevated: #0A0A0D;
+  --text-white: #FFFFFF;
+  --text-white-muted: rgba(255, 255, 255, 0.72);
+  --text-white-dim: rgba(255, 255, 255, 0.42);
+
+  --pink: #FFCDFF;
+  --pink-hover: #F6E3FB;
+  --pink-ink: #1A1018;
+
+  --surface-light: #F6F6F6;
+  --ink-light: #000000;
+  --ink-light-muted: rgba(0, 0, 0, 0.64);
+  --ink-light-dim: rgba(0, 0, 0, 0.40);
+
+  --hairline-dark: rgba(255, 255, 255, 0.14);
+  --hairline-dark-strong: rgba(255, 255, 255, 0.32);
+  --hairline-light: rgba(0, 0, 0, 0.13);
+  --hairline-light-strong: rgba(0, 0, 0, 0.28);
+
+  /* Type Scale */
+  --text-xs: clamp(0.72rem, 0.7rem + 0.1vw, 0.8rem);
+  --text-sm: clamp(0.84rem, 0.82rem + 0.14vw, 0.94rem);
+  --text-base: clamp(0.96rem, 0.92rem + 0.16vw, 1.04rem);
+  --text-lg: clamp(1.12rem, 1.04rem + 0.3vw, 1.32rem);
+  --text-xl: clamp(1.45rem, 1.2rem + 1.1vw, 2.25rem);
+  --text-2xl: clamp(2.1rem, 1.55rem + 2.3vw, 3.6rem);
+  --text-3xl: clamp(2.65rem, 1.85rem + 3.6vw, 5.4rem);
+  --text-hero: clamp(2.6rem, 1.55rem + 5.6vw, 8.2rem);
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-pill: 9999px;
+
+  --gutter: clamp(1.25rem, 3vw, 2.75rem);
+  --container-max: 1440px;
+
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --z-hairlines: 5;
+  --z-base: 10;
+  --z-sticky: 40;
+  --z-hud: 80;
+  --z-nav: 100;
+  --z-drawer: 120;
+  --z-modal: 200;
+  --z-curtain: 250;
+  --z-loader: 300;
+  --z-cursor: 400;
+}
