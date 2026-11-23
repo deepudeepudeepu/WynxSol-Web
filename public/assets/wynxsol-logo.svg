@@ -9,9 +9,9 @@
       <stop offset="100%" stop-color="#C8D0DC" />
     </linearGradient>
     <linearGradient id="wynxEdgeSheen" x1="270" y1="175" x2="720" y2="365" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95" />
-      <stop offset="50%" stop-color="#FFCDFF" stop-opacity="0.55" />
-      <stop offset="100%" stop-color="#1E2430" stop-opacity="0.9" />
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.96" />
+      <stop offset="50%" stop-color="#D4D4D8" stop-opacity="0.72" />
+      <stop offset="100%" stop-color="#27272A" stop-opacity="0.92" />
     </linearGradient>
   </defs>
   <!-- Left W diagonal wing -->

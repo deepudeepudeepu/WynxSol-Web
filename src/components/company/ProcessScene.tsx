@@ -34,7 +34,7 @@ export function ProcessScene() {
   return (
     <section
       ref={sectionRef}
-      className="process-scene is-light-surface"
+      className="process-scene"
       id="scene-process"
       data-scene-index="06 | 08"
       aria-labelledby="process-heading"
@@ -46,7 +46,7 @@ export function ProcessScene() {
           id="process-heading"
           style={{ fontSize: "var(--text-3xl)", maxWidth: "16ch" }}
         >
-          PRECISION FROM DISCOVERY TO DEPLOYMENT.
+          PRECISION FROM DISCOVERY TO <span className="text-chrome">DEPLOYMENT.</span>
         </h2>
 
         <div className="process-layout">
@@ -66,7 +66,9 @@ export function ProcessScene() {
                   <span className="process-row__num">{stage.num}</span>
                   <div>
                     <div className="process-row__title">{stage.title}</div>
-                    <p className="process-row__desc">{stage.description}</p>
+                    <div className="process-row__body">
+                      <p className="process-row__desc">{stage.description}</p>
+                    </div>
                   </div>
                   <span className="process-row__toggle">{active ? "\u2212" : "+"}</span>
                 </button>

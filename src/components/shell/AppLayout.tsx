@@ -4,28 +4,33 @@ import { WYNXSOL_CONFIG } from "../../config/wynxsol";
 import { useMeeting } from "../../context/MeetingContext";
 import { useNavigation } from "../../context/NavigationContext";
 import { useWhatsApp } from "../../context/WhatsAppContext";
+import { useMagnetic } from "../../hooks/useMagnetic";
 import { CustomCursor } from "./CustomCursor";
 import { SmartLink } from "./SmartLink";
 
 export function AppLayout() {
   const location = useLocation();
-  const { curtainState, registerHudSync } = useNavigation();
+  const { curtainState, registerHudSync, scrollToTop } = useNavigation();
   const { openWhatsApp } = useWhatsApp();
   const { openMeetingModal } = useMeeting();
 
   const isRestaurantPage = location.pathname.startsWith("/restaurant-ai");
   const activePage = isRestaurantPage ? "restaurant-ai" : "company";
 
-  const [isOnLight, setIsOnLight] = useState(false);
   const [sceneCounter, setSceneCounter] = useState(
     activePage === "restaurant-ai" ? "CH 01 | 03" : "01 | 08"
   );
-  const [activeCompanyRoute, setActiveCompanyRoute] = useState<"company" | "contact">("company");
+  const [activeCompanyRoute, setActiveCompanyRoute] = useState<
+    "company" | "capabilities" | "process" | "contact"
+  >("company");
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [isInverted, setIsInverted] = useState(false);
+  const [isLightMode, setIsLightMode] = useState(false);
 
   const progressRef = useRef<HTMLDivElement | null>(null);
   const burgerRef = useRef<HTMLButtonElement | null>(null);
+  const navBookRef = useMagnetic<HTMLButtonElement>(3);
+  const navWaRef = useMagnetic<HTMLButtonElement>(3);
 
   const updateScrollHud = useCallback(() => {
     const docHeight = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
@@ -34,15 +39,8 @@ export function AppLayout() {
       progressRef.current.style.width = `${pct.toFixed(2)}%`;
     }
 
-    const lightSections = document.querySelectorAll(".is-light-surface");
-    let overLight = false;
-    lightSections.forEach((sec) => {
-      const rect = sec.getBoundingClientRect();
-      if (rect.top <= 42 && rect.bottom >= 42) {
-        overLight = true;
-      }
-    });
-    setIsOnLight((prev) => (prev !== overLight ? overLight : prev));
+    const backTopVisible = window.scrollY > 480;
+    setShowBackToTop((prev) => (prev !== backTopVisible ? backTopVisible : prev));
 
     const scenes = document.querySelectorAll<HTMLElement>("[data-scene-index]");
     let currentIdx = activePage === "restaurant-ai" ? "CH 01 | 03" : "01 | 08";
@@ -55,12 +53,19 @@ export function AppLayout() {
     setSceneCounter((prev) => (prev !== currentIdx ? currentIdx : prev));
 
     if (activePage === "company") {
-      const contactEl =
-        document.getElementById("contact") || document.getElementById("scene-contact");
-      const inContact = contactEl
-        ? contactEl.getBoundingClientRect().top <= window.innerHeight * 0.55
-        : false;
-      const nextRoute = inContact ? "contact" : "company";
+      const capEl = document.getElementById("scene-capabilities");
+      const procEl = document.getElementById("scene-process");
+      const contactEl = document.getElementById("contact") || document.getElementById("scene-contact");
+      const threshold = window.innerHeight * 0.45;
+
+      let nextRoute: "company" | "capabilities" | "process" | "contact" = "company";
+      if (contactEl && contactEl.getBoundingClientRect().top <= threshold) {
+        nextRoute = "contact";
+      } else if (procEl && procEl.getBoundingClientRect().top <= threshold) {
+        nextRoute = "process";
+      } else if (capEl && capEl.getBoundingClientRect().top <= threshold) {
+        nextRoute = "capabilities";
+      }
       setActiveCompanyRoute((prev) => (prev !== nextRoute ? nextRoute : prev));
     }
   }, [activePage]);
@@ -78,7 +83,6 @@ export function AppLayout() {
     };
   }, [registerHudSync, updateScrollHud]);
 
-  // Close drawer on route change
   useEffect(() => {
     setDrawerOpen(false);
   }, [location.pathname, location.hash]);
@@ -101,9 +105,16 @@ export function AppLayout() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [drawerOpen, closeDrawer]);
 
-  const toggleInvert = () => {
-    const next = document.body.classList.toggle("is-inverted");
-    setIsInverted(next);
+  useEffect(() => {
+    if (isLightMode) {
+      document.documentElement.dataset.surfaceMode = "light";
+    } else {
+      delete document.documentElement.dataset.surfaceMode;
+    }
+  }, [isLightMode]);
+
+  const toggleSurfaceMode = () => {
+    setIsLightMode((prev) => !prev);
   };
 
   return (
@@ -112,21 +123,24 @@ export function AppLayout() {
         Skip to main content
       </a>
 
-      <header className={`wynx-nav${isOnLight ? " is-on-light" : ""}`} id="wynx-header">
+      <div className="arch-grid-guides" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+        <span />
+      </div>
+
+      <header className="wynx-nav" id="wynx-header">
         <div className="wynx-nav__row">
-          <SmartLink to="/" className="wynx-brand" aria-label="WynxSol Home">
-            {WYNXSOL_CONFIG.logoAssetPath.trim() !== "" ? (
+          <SmartLink to="/" className="wynx-brand" aria-label="Wynx Solutions Home">
+            {WYNXSOL_CONFIG.logoAssetPath.trim() !== "" && (
               <img
                 src={WYNXSOL_CONFIG.logoAssetPath}
-                alt="WynxSol logo"
+                alt="Wynx Solutions logo"
                 className="wynx-brand__img"
               />
-            ) : (
-              <span className="wynx-brand__plus" aria-hidden="true">
-                +
-              </span>
             )}
-            <span>WYNXSOL</span>
+            <span>WYNX SOLUTIONS</span>
           </SmartLink>
 
           <nav aria-label="Primary Navigation">
@@ -144,7 +158,12 @@ export function AppLayout() {
                       className={`wynx-nav__link${isActive ? " is-active" : ""}`}
                       data-route-id={route.id}
                     >
-                      {route.label}
+                      <span className="slide-up-label">
+                        <span className="slide-up-label__inner">{route.label}</span>
+                        <span className="slide-up-label__clone" aria-hidden="true">
+                          {route.label}
+                        </span>
+                      </span>
                     </SmartLink>
                   </li>
                 );
@@ -152,21 +171,23 @@ export function AppLayout() {
             </ul>
           </nav>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "0.6rem" }}>
+          <div className="wynx-nav__actions">
             <button
+              ref={navBookRef}
               type="button"
-              className={`btn ${isOnLight ? "btn--light-outline" : "btn--dark-outline"} btn--sm wynx-nav__cta-desktop`}
+              className="btn btn--outline btn--sm wynx-nav__cta-desktop"
               id="nav-book-meeting-btn"
               onClick={() => openMeetingModal()}
             >
               Book a Meeting
             </button>
             <button
+              ref={navWaRef}
               type="button"
-              className="btn btn--pink btn--sm wynx-nav__cta-desktop"
+              className="btn btn--chrome btn--sm wynx-nav__cta-desktop"
               onClick={() => openWhatsApp()}
             >
-              Contact Us on WhatsApp
+              WhatsApp
             </button>
             <button
               ref={burgerRef}
@@ -190,13 +211,34 @@ export function AppLayout() {
       <div className="wynx-hud-bottom">
         <button
           type="button"
+          className="wynx-hud-pill wynx-hud-pill--btn"
           id="wynx-invert-btn"
-          aria-pressed={isInverted}
-          onClick={toggleInvert}
+          aria-pressed={isLightMode}
+          onClick={toggleSurfaceMode}
         >
-          invert surface
+          <svg className="wynx-hud-orbit" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeOpacity="0.45" strokeWidth="1" />
+            <circle cx="6" cy="1.8" r="1.4" fill="currentColor" />
+          </svg>
+          <span>{isLightMode ? "Dark Mode" : "Light Mode"}</span>
         </button>
-        <span id="wynx-scene-counter">{sceneCounter}</span>
+
+        <div className="wynx-hud-right">
+          {showBackToTop && (
+            <button
+              type="button"
+              className="wynx-hud-pill wynx-hud-pill--btn"
+              id="wynx-back-to-top"
+              aria-label="Back to top"
+              onClick={scrollToTop}
+            >
+              &uarr; Top
+            </button>
+          )}
+          <span className="wynx-hud-pill" id="wynx-scene-counter">
+            {sceneCounter}
+          </span>
+        </div>
       </div>
 
       <div
@@ -210,19 +252,21 @@ export function AppLayout() {
         <div className="mobile-drawer__head">
           <span
             style={{
+              fontFamily: "var(--font-mono)",
               fontSize: "11px",
-              letterSpacing: "0.12em",
+              letterSpacing: "0.14em",
               textTransform: "uppercase",
-              color: "var(--pink)",
+              color: "var(--text-muted)",
             }}
           >
-            WYNXSOL // NAVIGATION
+            WYNX SOLUTIONS // NAVIGATION
           </span>
           <button
             type="button"
             className="wynx-modal__close"
             id="wynx-drawer-close"
             aria-label="Close menu"
+            tabIndex={drawerOpen ? 0 : -1}
             onClick={() => closeDrawer(true)}
           >
             &times;
@@ -231,7 +275,12 @@ export function AppLayout() {
 
         <ul className="mobile-drawer__list">
           <li>
-            <SmartLink to="/#company" className="mobile-drawer__link" onClick={() => closeDrawer(false)}>
+            <SmartLink
+              to="/#company"
+              className="mobile-drawer__link"
+              tabIndex={drawerOpen ? 0 : -1}
+              onClick={() => closeDrawer(false)}
+            >
               Company
             </SmartLink>
           </li>
@@ -239,31 +288,39 @@ export function AppLayout() {
             <SmartLink
               to="/#scene-capabilities"
               className="mobile-drawer__link"
+              tabIndex={drawerOpen ? 0 : -1}
               onClick={() => closeDrawer(false)}
             >
-              What We Build
+              Capabilities
             </SmartLink>
           </li>
           <li>
             <SmartLink
               to="/#scene-process"
               className="mobile-drawer__link"
+              tabIndex={drawerOpen ? 0 : -1}
               onClick={() => closeDrawer(false)}
             >
-              Our Process
+              Process
             </SmartLink>
           </li>
           <li>
             <SmartLink
               to="/restaurant-ai"
-              className="mobile-drawer__link text-pink"
+              className="mobile-drawer__link text-chrome"
+              tabIndex={drawerOpen ? 0 : -1}
               onClick={() => closeDrawer(false)}
             >
               Restaurant Intelligence
             </SmartLink>
           </li>
           <li>
-            <SmartLink to="/#contact" className="mobile-drawer__link" onClick={() => closeDrawer(false)}>
+            <SmartLink
+              to="/#contact"
+              className="mobile-drawer__link"
+              tabIndex={drawerOpen ? 0 : -1}
+              onClick={() => closeDrawer(false)}
+            >
               Contact
             </SmartLink>
           </li>
@@ -272,8 +329,9 @@ export function AppLayout() {
         <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
           <button
             type="button"
-            className="btn btn--pink"
+            className="btn btn--chrome"
             id="drawer-book-meeting-btn"
+            tabIndex={drawerOpen ? 0 : -1}
             onClick={() => {
               closeDrawer(false);
               openMeetingModal();
@@ -283,7 +341,8 @@ export function AppLayout() {
           </button>
           <button
             type="button"
-            className="btn btn--dark-outline"
+            className="btn btn--outline"
+            tabIndex={drawerOpen ? 0 : -1}
             onClick={() => {
               closeDrawer(false);
               openWhatsApp();
@@ -293,11 +352,12 @@ export function AppLayout() {
           </button>
           <a
             href={`mailto:${WYNXSOL_CONFIG.contactEmail}`}
-            style={{ fontSize: "13px", color: "var(--pink)", textDecoration: "underline" }}
+            tabIndex={drawerOpen ? 0 : -1}
+            style={{ fontSize: "13px", color: "var(--text-primary)", textDecoration: "underline" }}
           >
             {WYNXSOL_CONFIG.contactEmail}
           </a>
-          <p style={{ fontSize: "12px", color: "var(--text-white-dim)" }}>
+          <p style={{ fontSize: "12px", color: "var(--text-muted)" }}>
             {WYNXSOL_CONFIG.tagline}
           </p>
         </div>
@@ -307,7 +367,8 @@ export function AppLayout() {
         className={`page-curtain${curtainState.visible ? " is-entering" : ""}`}
         aria-hidden={!curtainState.visible}
       >
-        <span className="page-curtain__mark">WYNXSOL</span>
+        <img src={WYNXSOL_CONFIG.logoAssetPath} alt="" className="page-curtain__logo" />
+        <span className="page-curtain__mark">WYNX SOLUTIONS</span>
         <span className="page-curtain__sub" id="curtain-dest">
           {curtainState.label}
         </span>

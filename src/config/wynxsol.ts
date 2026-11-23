@@ -1,12 +1,16 @@
 export interface FounderInfo {
   id: string;
+  index: string;
   name: string;
   role: string;
   initials: string;
+  photoPath: string;
+  photoPosition: string;
+  photoScale: number;
 }
 
 export interface NavRouteItem {
-  id: "company" | "restaurant-ai" | "contact";
+  id: "company" | "capabilities" | "process" | "restaurant-ai" | "contact";
   label: string;
   to: string;
 }
@@ -59,26 +63,40 @@ export const WYNXSOL_CONFIG: WynxsolConfig = {
   founders: [
     {
       id: "deepak-raj",
+      index: "01",
       name: "Deepak Raj",
       role: "CEO & Founder",
       initials: "DR",
+      photoPath: "/assets/founders/deepak-raj.jpg",
+      photoPosition: "50% 12%",
+      photoScale: 1.24,
     },
     {
       id: "muhammad-measam-raza",
+      index: "02",
       name: "Muhammad Measam Raza",
       role: "CTO & Co-Founder",
       initials: "MR",
+      photoPath: "/assets/founders/muhammad-measam-raza.jpg",
+      photoPosition: "50% 18%",
+      photoScale: 1.02,
     },
     {
       id: "abdul-mutlib-ali",
+      index: "03",
       name: "Abdul Mutlib Ali",
       role: "Co-Founder",
       initials: "AM",
+      photoPath: "/assets/founders/abdul-mutlib-ali.jpg",
+      photoPosition: "50% 14%",
+      photoScale: 1.0,
     },
   ],
 
   routes: [
     { id: "company", label: "Company", to: "/#company" },
+    { id: "capabilities", label: "Capabilities", to: "/#scene-capabilities" },
+    { id: "process", label: "Process", to: "/#scene-process" },
     { id: "restaurant-ai", label: "Restaurant Intelligence", to: "/restaurant-ai" },
     { id: "contact", label: "Contact", to: "/#contact" },
   ],

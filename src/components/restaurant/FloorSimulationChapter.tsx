@@ -180,16 +180,18 @@ export function FloorSimulationChapter() {
         );
         setCleanerPos({ x: t4Snapshot.x + 6, y: t4Snapshot.y - 6 });
         setToast({ visible: false, title: "", subtitle: "" });
-        setTurnoverCount((c) => c + 1);
+        setTurnoverCount((c) => Math.max(1, c + 1));
         setStatusBanner("Cleaning completed. Table 04 status: Ready for new seating.");
         scheduleNext(2400, 6);
       } else if (targetStage === 6) {
         setCleanerPos({ x: 44, y: 14 });
         setTables((prev) =>
           prev.map((t) =>
-            t.id === "04" ? { ...t, status: "available", hasGuests: false } : t
+            t.id === "04" ? { ...t, status: "available", hasGuests: false, minutes: 0 } : t
           )
         );
+        setTotalAlerts((c) => Math.max(1, c));
+        setTurnoverCount((c) => Math.max(1, c));
         setToast({ visible: false, title: "", subtitle: "" });
         setStatusBanner("Full lifecycle complete. Table 04 is Available again.");
         isPlayingRef.current = false;
@@ -302,7 +304,6 @@ export function FloorSimulationChapter() {
     }
   };
 
-  // Derived metrics
   const occupiedCount = tables.filter((t) =>
     ["occupied", "awaiting_waiter", "attended"].includes(t.status)
   ).length;
@@ -333,7 +334,7 @@ export function FloorSimulationChapter() {
             }}
           >
             <div>
-              <span className="eyebrow-editorial" style={{ color: "var(--pink)" }}>
+              <span className="eyebrow-editorial">
                 Chapter 02 // Interactive Floor Simulation
               </span>
               <h2
@@ -349,12 +350,12 @@ export function FloorSimulationChapter() {
               </p>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
-              <SmartLink to="#chapter-solution" className="btn btn--dark-outline btn--sm">
+              <SmartLink to="#chapter-solution" className="btn btn--outline btn--sm">
                 Chapter 03: Architecture &darr;
               </SmartLink>
               <button
                 type="button"
-                className="btn btn--dark-outline btn--sm"
+                className="btn btn--outline btn--sm"
                 id="sim-book-meeting-btn"
                 onClick={() => openMeetingModal("Restaurant Intelligence Demo")}
               >
@@ -362,9 +363,9 @@ export function FloorSimulationChapter() {
               </button>
               <button
                 type="button"
-                className="btn btn--pink btn--sm"
+                className="btn btn--chrome btn--sm"
                 onClick={() =>
-                  openWhatsApp("Hi WynxSol, I'd like to discuss the Restaurant Intelligence solution.")
+                  openWhatsApp("Hi Wynx Solutions, I'd like to discuss the Restaurant Intelligence solution.")
                 }
               >
                 Discuss This Solution
@@ -417,7 +418,7 @@ export function FloorSimulationChapter() {
             <div className="sim-transport">
               <button
                 type="button"
-                className="btn btn--pink btn--sm"
+                className="btn btn--chrome btn--sm"
                 id="sim-play-pause-btn"
                 aria-pressed={isPlaying}
                 onClick={handlePlayPause}
@@ -426,7 +427,7 @@ export function FloorSimulationChapter() {
               </button>
               <button
                 type="button"
-                className="btn btn--dark-outline btn--sm"
+                className="btn btn--outline btn--sm"
                 id="sim-skip-btn"
                 onClick={handleSkip}
               >
@@ -434,7 +435,7 @@ export function FloorSimulationChapter() {
               </button>
               <button
                 type="button"
-                className="btn btn--dark-outline btn--sm"
+                className="btn btn--outline btn--sm"
                 id="sim-restart-btn"
                 onClick={handleReset}
               >
@@ -449,13 +450,13 @@ export function FloorSimulationChapter() {
                 <strong style={{ display: "block", fontSize: "15px" }} id="sim-hud-title">
                   {stageMeta.title}
                 </strong>
-                <span style={{ fontSize: "12px", color: "var(--pink)" }} id="sim-hud-status">
+                <span style={{ fontSize: "12px", color: "rgba(255, 255, 255, 0.72)" }} id="sim-hud-status">
                   {statusBanner}
                 </span>
               </div>
               <button
                 type="button"
-                className="btn btn--pink btn--sm"
+                className="btn btn--chrome btn--sm"
                 id="sim-primary-action"
                 onClick={handleSkip}
               >
@@ -493,7 +494,7 @@ export function FloorSimulationChapter() {
               </div>
               <div className="sim-insight-cell">
                 <div className="sim-insight-cell__label">Waiting Tables</div>
-                <div className="sim-insight-cell__val text-pink" id="dash-waiting">
+                <div className="sim-insight-cell__val" id="dash-waiting">
                   {waitingCount} ({totalAlerts} total)
                 </div>
               </div>
@@ -511,7 +512,7 @@ export function FloorSimulationChapter() {
               </div>
               <div className="sim-insight-cell">
                 <div className="sim-insight-cell__label">Table Turnover</div>
-                <div className="sim-insight-cell__val text-pink" id="dash-turnover">
+                <div className="sim-insight-cell__val" id="dash-turnover">
                   {turnoverCount} turned
                 </div>
               </div>
@@ -526,48 +527,48 @@ export function FloorSimulationChapter() {
             >
               {selectedTableId && (
                 <>
-                  <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--pink)" }}>
+                  <span style={{ fontSize: "12px", fontWeight: 600, color: "#FFFFFF" }}>
                     Manual Table Control &mdash; Table {selectedTableId}
                   </span>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", alignItems: "center" }}>
                     <button
                       type="button"
-                      className="btn btn--dark-outline btn--sm"
+                      className="btn btn--outline btn--sm"
                       onClick={() => handleTableAction("arrive")}
                     >
                       Guests Arrive
                     </button>
                     <button
                       type="button"
-                      className="btn btn--dark-outline btn--sm"
+                      className="btn btn--outline btn--sm"
                       onClick={() => handleTableAction("delay")}
                     >
                       15m Wait Alert
                     </button>
                     <button
                       type="button"
-                      className="btn btn--dark-outline btn--sm"
+                      className="btn btn--outline btn--sm"
                       onClick={() => handleTableAction("attend")}
                     >
                       Assign Waiter
                     </button>
                     <button
                       type="button"
-                      className="btn btn--dark-outline btn--sm"
+                      className="btn btn--outline btn--sm"
                       onClick={() => handleTableAction("leave")}
                     >
                       Guests Leave
                     </button>
                     <button
                       type="button"
-                      className="btn btn--pink btn--sm"
+                      className="btn btn--chrome btn--sm"
                       onClick={() => handleTableAction("clean")}
                     >
                       Mark Clean
                     </button>
                     <button
                       type="button"
-                      className="btn btn--dark-outline btn--sm"
+                      className="btn btn--outline btn--sm"
                       aria-label="Close manual table control"
                       onClick={() => handleTableAction("close")}
                     >
@@ -609,7 +610,7 @@ export function FloorSimulationChapter() {
                     <div className="sim-table-surface">
                       <strong style={{ fontSize: "12px" }}>T-{t.id}</strong>
                       {(t.status === "occupied" || t.status === "awaiting_waiter") && (
-                        <span style={{ fontSize: "10px", color: "var(--pink)", fontWeight: 600 }}>
+                        <span style={{ fontSize: "10px", color: "#FFFFFF", fontWeight: 600 }}>
                           {String(t.minutes).padStart(2, "0")}:00
                         </span>
                       )}
@@ -640,9 +641,10 @@ export function FloorSimulationChapter() {
               >
                 <div
                   style={{
+                    fontFamily: "var(--font-mono)",
                     fontSize: "10px",
-                    fontWeight: 700,
-                    color: "var(--pink)",
+                    fontWeight: 600,
+                    color: "#FFFFFF",
                     textTransform: "uppercase",
                     letterSpacing: "0.08em",
                   }}
@@ -652,7 +654,7 @@ export function FloorSimulationChapter() {
                 <strong style={{ display: "block", fontSize: "13px", marginTop: "3px" }}>
                   {toast.title}
                 </strong>
-                <span style={{ fontSize: "12px", color: "var(--text-white-muted)" }}>
+                <span style={{ fontSize: "12px", color: "rgba(255, 255, 255, 0.72)" }}>
                   {toast.subtitle}
                 </span>
               </div>
@@ -688,7 +690,7 @@ export function FloorSimulationChapter() {
               gap: "1rem",
               marginTop: "1.5rem",
               fontSize: "12px",
-              color: "var(--text-white-dim)",
+              color: "var(--text-muted)",
             }}
           >
             <span>

@@ -1,7 +1,11 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
+import { createStudioChromeEnv } from "../../utils/threeStudioEnv";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const CORRIDOR_WORDS = [
   "PERCEPTION",
@@ -14,20 +18,22 @@ const CORRIDOR_WORDS = [
   "ENGINEER",
 ];
 
-function createWordTexture(word: string, accentPink: boolean): THREE.CanvasTexture {
+function createWordTexture(word: string, isChromeAccent: boolean): THREE.CanvasTexture {
   const c = document.createElement("canvas");
   c.width = 512;
   c.height = 512;
   const ctx = c.getContext("2d");
   if (ctx) {
-    ctx.fillStyle = "#060608";
+    ctx.fillStyle = "#050506";
     ctx.fillRect(0, 0, 512, 512);
 
-    ctx.strokeStyle = accentPink ? "rgba(255, 205, 255, 0.35)" : "rgba(255, 255, 255, 0.16)";
+    ctx.strokeStyle = isChromeAccent
+      ? "rgba(255, 255, 255, 0.34)"
+      : "rgba(255, 255, 255, 0.12)";
     ctx.lineWidth = 2;
     ctx.strokeRect(4, 4, 504, 504);
 
-    ctx.fillStyle = accentPink ? "#FFCDFF" : "rgba(255, 255, 255, 0.88)";
+    ctx.fillStyle = isChromeAccent ? "#FFFFFF" : "rgba(255, 255, 255, 0.72)";
     ctx.font = "400 52px 'Switzer', system-ui, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -46,7 +52,7 @@ function createChamberTexture(): THREE.CanvasTexture {
   const ctx = c.getContext("2d");
 
   if (ctx) {
-    ctx.fillStyle = "#0E0E12";
+    ctx.fillStyle = "#0A0A0C";
     ctx.fillRect(0, 0, 768, 768);
 
     ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
@@ -63,8 +69,8 @@ function createChamberTexture(): THREE.CanvasTexture {
     }
 
     const beam = ctx.createLinearGradient(0, 0, 768, 768);
-    beam.addColorStop(0, "rgba(255, 205, 255, 0.22)");
-    beam.addColorStop(0.5, "rgba(255, 255, 255, 0.06)");
+    beam.addColorStop(0, "rgba(255, 255, 255, 0.18)");
+    beam.addColorStop(0.5, "rgba(255, 255, 255, 0.05)");
     beam.addColorStop(1, "rgba(0, 0, 0, 0)");
     ctx.fillStyle = beam;
     ctx.beginPath();
@@ -75,9 +81,9 @@ function createChamberTexture(): THREE.CanvasTexture {
     ctx.closePath();
     ctx.fill();
 
-    ctx.fillStyle = "#1A1A22";
+    ctx.fillStyle = "#141418";
     ctx.fillRect(214, 214, 340, 340);
-    ctx.strokeStyle = "rgba(255, 205, 255, 0.65)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.65)";
     ctx.lineWidth = 3;
     ctx.strokeRect(214, 214, 340, 340);
 
@@ -86,14 +92,14 @@ function createChamberTexture(): THREE.CanvasTexture {
         const dx = 252 + col * 33;
         const dy = 252 + r * 33;
         const dist = Math.hypot(col - 4, r - 4);
-        ctx.fillStyle = dist < 2.6 ? "#FFCDFF" : "rgba(255, 255, 255, 0.35)";
+        ctx.fillStyle = dist < 2.6 ? "#FFFFFF" : "rgba(255, 255, 255, 0.34)";
         ctx.beginPath();
         ctx.arc(dx, dy, dist < 2.6 ? 5 : 3, 0, Math.PI * 2);
         ctx.fill();
       }
     }
 
-    ctx.fillStyle = "#262530";
+    ctx.fillStyle = "#1E1E24";
     ctx.fillRect(100, 220, 72, 328);
     ctx.fillRect(596, 220, 72, 328);
     ctx.fillRect(220, 100, 328, 72);
@@ -124,15 +130,18 @@ export function PerceptionCorridorScene() {
       renderer = new THREE.WebGLRenderer({
         canvas,
         antialias: true,
-        alpha: false,
+        alpha: true,
         powerPreference: "high-performance",
       });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      const maxDpr = window.innerWidth <= 768 ? 1.5 : 2;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.15;
     } catch {
       renderer = null;
     }
 
-    // Fallback 2D projection if WebGL fails
+    // Fallback 2D monochrome projection if WebGL fails
     if (!renderer) {
       const ctx2d = canvas.getContext("2d");
       if (!ctx2d) return;
@@ -143,8 +152,7 @@ export function PerceptionCorridorScene() {
         const h = canvas.clientHeight || window.innerHeight;
         canvas.width = w;
         canvas.height = h;
-        ctx2d.fillStyle = "#000000";
-        ctx2d.fillRect(0, 0, w, h);
+        ctx2d.clearRect(0, 0, w, h);
         const cx = w / 2;
         const cy = h / 2;
 
@@ -152,7 +160,7 @@ export function PerceptionCorridorScene() {
           const depth = (i / 8 + prog * 1.4) % 1;
           const size = (0.14 + Math.pow(depth, 1.8) * 1.25) * Math.min(w, h);
           ctx2d.strokeStyle =
-            i % 2 === 0 ? "rgba(255, 205, 255, 0.55)" : "rgba(255, 255, 255, 0.35)";
+            i % 2 === 0 ? "rgba(255, 255, 255, 0.5)" : "rgba(255, 255, 255, 0.25)";
           ctx2d.lineWidth = 1.5;
           ctx2d.strokeRect(cx - size / 2, cy - size / 2, size, size);
         }
@@ -188,9 +196,12 @@ export function PerceptionCorridorScene() {
     const activeRenderer = renderer;
     const disposables: Array<{ dispose: () => void }> = [];
 
+    const studioEnv = createStudioChromeEnv(activeRenderer);
+    disposables.push(studioEnv);
+
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000);
-    scene.fog = new THREE.FogExp2(0x000000, 0.024);
+    scene.environment = studioEnv.envMap;
+    scene.fog = new THREE.FogExp2(0x000000, 0.025);
 
     const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 140);
     const rootGroup = new THREE.Group();
@@ -199,7 +210,7 @@ export function PerceptionCorridorScene() {
     const ambient = new THREE.AmbientLight(0xffffff, 0.72);
     scene.add(ambient);
 
-    const camLight = new THREE.PointLight(0xffcdff, 2.8, 38, 1.4);
+    const camLight = new THREE.PointLight(0xffffff, 2.8, 40, 1.35);
     scene.add(camLight);
 
     const textures = CORRIDOR_WORDS.map((w, idx) => {
@@ -217,14 +228,14 @@ export function PerceptionCorridorScene() {
     const whiteLineMat = new THREE.LineBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.24,
+      opacity: 0.36,
     });
-    const pinkLineMat = new THREE.LineBasicMaterial({
-      color: 0xffcdff,
+    const silverLineMat = new THREE.LineBasicMaterial({
+      color: 0xa1a1aa,
       transparent: true,
-      opacity: 0.42,
+      opacity: 0.18,
     });
-    disposables.push(boxGeo, edgeGeo, whiteLineMat, pinkLineMat);
+    disposables.push(boxGeo, edgeGeo, whiteLineMat, silverLineMat);
 
     const cubeMeshes: THREE.Mesh[] = [];
 
@@ -237,8 +248,9 @@ export function PerceptionCorridorScene() {
           const wordIdx = (layer * 3 + (ix + 1) + (iy + 1) * 2) % textures.length;
           const faceMat = new THREE.MeshStandardMaterial({
             map: textures[wordIdx],
-            roughness: 0.75,
-            metalness: 0.1,
+            roughness: 0.65,
+            metalness: 0.18,
+            envMapIntensity: 0.6,
           });
           disposables.push(faceMat);
 
@@ -252,7 +264,7 @@ export function PerceptionCorridorScene() {
 
           const wire = new THREE.LineSegments(
             edgeGeo,
-            (layer + ix + iy) % 2 === 0 ? pinkLineMat : whiteLineMat
+            (layer + ix + iy) % 2 === 0 ? whiteLineMat : silverLineMat
           );
           mesh.add(wire);
           rootGroup.add(mesh);
@@ -276,17 +288,22 @@ export function PerceptionCorridorScene() {
     const shellGeo = new THREE.BoxGeometry(3.82, 3.82, 3.82);
     const shellEdges = new THREE.EdgesGeometry(shellGeo);
     const shellWireMat = new THREE.LineBasicMaterial({
-      color: 0xffcdff,
+      color: 0xe4e4e7,
       transparent: true,
-      opacity: 0.8,
+      opacity: 0.72,
     });
     chamberGroup.add(new THREE.LineSegments(shellEdges, shellWireMat));
     disposables.push(shellGeo, shellEdges, shellWireMat);
 
     const tableGeo = new THREE.BoxGeometry(1.3, 0.24, 1.3);
-    const tableMat = new THREE.MeshStandardMaterial({ color: 0x1e1e26, roughness: 0.4 });
+    const tableMat = new THREE.MeshStandardMaterial({
+      color: 0x202026,
+      metalness: 0.78,
+      roughness: 0.24,
+      envMapIntensity: 1.4,
+    });
     const tableEdges = new THREE.EdgesGeometry(tableGeo);
-    const tableWireMat = new THREE.LineBasicMaterial({ color: 0xffcdff });
+    const tableWireMat = new THREE.LineBasicMaterial({ color: 0xffffff });
     const centerMonolith = new THREE.Mesh(tableGeo, tableMat);
     centerMonolith.position.set(0, -0.5, -0.4);
     centerMonolith.add(new THREE.LineSegments(tableEdges, tableWireMat));
@@ -298,13 +315,16 @@ export function PerceptionCorridorScene() {
     const pillarEdgeGeo = new THREE.EdgesGeometry(pillarGeo);
     disposables.push(pillarGeo, pillarEdgeGeo);
 
+    const pillarColors = [0x1c1c21, 0x2e2e36, 0x16161a];
     [-0.95, 0, 0.95].forEach((px, idx) => {
       const pMat = new THREE.MeshStandardMaterial({
-        color: idx === 1 ? 0x2c1b2c : 0x16161c,
-        roughness: 0.35,
+        color: pillarColors[idx],
+        metalness: 0.78,
+        roughness: 0.24,
+        envMapIntensity: 1.5,
       });
       const pWireMat = new THREE.LineBasicMaterial({
-        color: idx === 1 ? 0xffcdff : 0xffffff,
+        color: idx === 1 ? 0xffffff : 0xd4d4d8,
         transparent: true,
         opacity: 0.85,
       });
@@ -333,10 +353,21 @@ export function PerceptionCorridorScene() {
     window.addEventListener("resize", resize);
 
     let scrollProg = reducedMotion ? 0.45 : 0;
+    let entryVisibility = reducedMotion ? 1 : 0;
     let isVisible = true;
+
+    const syncCanvasOpacity = () => {
+      const exitFade = reducedMotion
+        ? 1
+        : scrollProg > 0.94
+          ? Math.max(0.25, 1 - ((scrollProg - 0.94) / 0.06) * 0.75)
+          : 1;
+      canvas.style.opacity = String(Math.max(0, Math.min(1, entryVisibility * exitFade)));
+    };
 
     const updateSceneForProgress = (p: number) => {
       scrollProg = Math.max(0, Math.min(1, p));
+      syncCanvasOpacity();
 
       if (stmtRef.current) {
         const stmtFade = scrollProg < 0.16 ? 1 - scrollProg / 0.16 : 0;
@@ -420,8 +451,20 @@ export function PerceptionCorridorScene() {
 
     updateSceneForProgress(scrollProg);
 
+    let stEntry: ScrollTrigger | null = null;
     let st: ScrollTrigger | null = null;
     if (!reducedMotion) {
+      stEntry = ScrollTrigger.create({
+        trigger: wrap,
+        start: "top bottom",
+        end: "top 35%",
+        scrub: true,
+        onUpdate: (self) => {
+          entryVisibility = self.progress;
+          syncCanvasOpacity();
+        },
+      });
+
       st = ScrollTrigger.create({
         trigger: wrap,
         start: "top top",
@@ -432,6 +475,7 @@ export function PerceptionCorridorScene() {
     }
 
     return () => {
+      stEntry?.kill();
       st?.kill();
       obs?.disconnect();
       window.removeEventListener("resize", resize);
@@ -447,20 +491,24 @@ export function PerceptionCorridorScene() {
       id="scene-perception"
       data-scene-index="02 | 08"
       aria-labelledby="perception-heading"
+      style={reducedMotion ? { height: "auto", minHeight: "100vh" } : undefined}
     >
       <div className="perception-pin">
-        <canvas ref={canvasRef} className="tesseract-canvas" id="tesseract-canvas" aria-hidden="true" />
+        <canvas
+          ref={canvasRef}
+          className="tesseract-canvas"
+          id="tesseract-canvas"
+          aria-hidden="true"
+        />
 
         <div className="perception-overlay">
           <div ref={stmtRef} className="perception-statement" id="perception-statement">
-            <span className="eyebrow-editorial" style={{ color: "var(--pink)" }}>
-              02 // Spatial Passage
-            </span>
+            <span className="eyebrow-editorial">02 // Spatial Passage</span>
             <h2 className="serif-display" id="perception-heading">
               <span ref={leftWordRef} className="kinetic-word-3d kinetic-word-3d--left">
                 PERCEPTION
               </span>
-              <span className="kinetic-word-3d kinetic-word-3d--center text-pink">DEFINES</span>
+              <span className="kinetic-word-3d kinetic-word-3d--center text-chrome">DEFINES</span>
               <span ref={rightWordRef} className="kinetic-word-3d kinetic-word-3d--right">
                 INTELLIGENCE.
               </span>

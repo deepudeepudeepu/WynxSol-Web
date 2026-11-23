@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { createInitialTables, PROBLEM_BEATS } from "../../data/restaurant";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
+import { createStudioChromeEnv } from "../../utils/threeStudioEnv";
 import { SmartLink } from "../shell/SmartLink";
 
 export function ProblemChapter3D() {
@@ -30,12 +31,14 @@ export function ProblemChapter3D() {
         antialias: true,
         powerPreference: "high-performance",
       });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      const maxDpr = window.innerWidth <= 768 ? 1.5 : 2;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.15;
     } catch {
       renderer = null;
     }
 
-    // 2D Canvas fallback if WebGL is unavailable
     if (!renderer) {
       const ctx2d = canvas.getContext("2d");
       if (!ctx2d) return;
@@ -46,10 +49,10 @@ export function ProblemChapter3D() {
         const h = canvas.clientHeight || window.innerHeight;
         canvas.width = w;
         canvas.height = h;
-        ctx2d.fillStyle = "#030305";
+        ctx2d.fillStyle = "#050506";
         ctx2d.fillRect(0, 0, w, h);
 
-        ctx2d.strokeStyle = "rgba(255, 205, 255, 0.28)";
+        ctx2d.strokeStyle = "rgba(255, 255, 255, 0.3)";
         layoutTables.forEach((t) => {
           const px = (t.x / 100) * w;
           const py = (t.y / 100) * h;
@@ -85,13 +88,17 @@ export function ProblemChapter3D() {
     const activeRenderer = renderer;
     const disposables: Array<{ dispose: () => void }> = [];
 
+    const studioEnv = createStudioChromeEnv(activeRenderer);
+    disposables.push(studioEnv);
+
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x030305);
-    scene.fog = new THREE.FogExp2(0x030305, 0.032);
+    scene.background = new THREE.Color(0x050506);
+    scene.fog = new THREE.FogExp2(0x050506, 0.03);
+    scene.environment = studioEnv.envMap;
 
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 80);
 
-    const gridHelper = new THREE.GridHelper(22, 22, 0x3a2a3a, 0x16161c);
+    const gridHelper = new THREE.GridHelper(22, 22, 0x3f3f46, 0x18181b);
     gridHelper.position.y = 0;
     scene.add(gridHelper);
     disposables.push(gridHelper.geometry);
@@ -104,9 +111,9 @@ export function ProblemChapter3D() {
     const floorGeo = new THREE.PlaneGeometry(20, 14);
     floorGeo.rotateX(-Math.PI / 2);
     const floorMat = new THREE.MeshStandardMaterial({
-      color: 0x07070a,
-      roughness: 0.9,
-      metalness: 0.1,
+      color: 0x070708,
+      roughness: 0.72,
+      metalness: 0.25,
     });
     const floorMesh = new THREE.Mesh(floorGeo, floorMat);
     floorMesh.position.y = -0.02;
@@ -116,35 +123,52 @@ export function ProblemChapter3D() {
     const wallBoxGeo = new THREE.BoxGeometry(15.5, 3.6, 10.5);
     const wallEdgeGeo = new THREE.EdgesGeometry(wallBoxGeo);
     const wallLineMat = new THREE.LineBasicMaterial({
-      color: 0xffffff,
+      color: 0xa1a1aa,
       transparent: true,
-      opacity: 0.14,
+      opacity: 0.16,
     });
     const wallLines = new THREE.LineSegments(wallEdgeGeo, wallLineMat);
     wallLines.position.set(0, 1.8, 0);
     scene.add(wallLines);
     disposables.push(wallBoxGeo, wallEdgeGeo, wallLineMat);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.58));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.15);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.7);
     keyLight.position.set(6, 12, 8);
     scene.add(keyLight);
-    const pinkPendant = new THREE.PointLight(0xffcdff, 2.4, 16, 1.4);
-    pinkPendant.position.set(0, 3.4, 0.8);
-    scene.add(pinkPendant);
+    const whitePendant = new THREE.PointLight(0xffffff, 2.8, 18, 1.3);
+    whitePendant.position.set(0, 3.4, 0.8);
+    scene.add(whitePendant);
 
     const tableWorldPos: Record<string, THREE.Vector3> = {};
     const tableTopGeo = new THREE.BoxGeometry(1.35, 0.1, 1.35);
     const legGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.72, 8);
     const chairGeo = new THREE.BoxGeometry(0.36, 0.45, 0.36);
     const guestGeo = new THREE.CylinderGeometry(0.16, 0.19, 0.52, 12);
-    const darkTableMat = new THREE.MeshStandardMaterial({ color: 0x181820, roughness: 0.45 });
-    const chairMat = new THREE.MeshStandardMaterial({ color: 0x262630, roughness: 0.6 });
-    const legMat = new THREE.MeshStandardMaterial({ color: 0x32323d, roughness: 0.5 });
-    const guestMat = new THREE.MeshStandardMaterial({ color: 0xf4f4f6, roughness: 0.35 });
-    const edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 });
-    const pinkEdgeMat = new THREE.LineBasicMaterial({
-      color: 0xffcdff,
+    const darkTableMat = new THREE.MeshStandardMaterial({
+      color: 0x18181b,
+      roughness: 0.28,
+      metalness: 0.72,
+      envMapIntensity: 1.15,
+    });
+    const chairMat = new THREE.MeshStandardMaterial({
+      color: 0x27272a,
+      roughness: 0.42,
+      metalness: 0.45,
+    });
+    const legMat = new THREE.MeshStandardMaterial({
+      color: 0xa1a1aa,
+      roughness: 0.2,
+      metalness: 0.9,
+    });
+    const guestMat = new THREE.MeshStandardMaterial({
+      color: 0xf4f4f5,
+      roughness: 0.25,
+      metalness: 0.35,
+    });
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0x71717a, transparent: true, opacity: 0.35 });
+    const brightEdgeMat = new THREE.LineBasicMaterial({
+      color: 0xffffff,
       transparent: true,
       opacity: 0.95,
     });
@@ -159,7 +183,7 @@ export function ProblemChapter3D() {
       legMat,
       guestMat,
       edgeMat,
-      pinkEdgeMat,
+      brightEdgeMat,
       tableEdgeGeo
     );
 
@@ -171,13 +195,13 @@ export function ProblemChapter3D() {
     const ringGeo = new THREE.RingGeometry(0.95, 1.12, 32);
     ringGeo.rotateX(-Math.PI / 2);
     const beaconMat = new THREE.MeshBasicMaterial({
-      color: 0xffcdff,
+      color: 0xffffff,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.9,
       side: THREE.DoubleSide,
     });
     const uncleanedRingMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
+      color: 0xa1a1aa,
       transparent: true,
       opacity: 0.65,
       side: THREE.DoubleSide,
@@ -198,7 +222,7 @@ export function ProblemChapter3D() {
       const top = new THREE.Mesh(tableTopGeo, darkTableMat);
       top.position.y = 0.74;
       top.add(
-        new THREE.LineSegments(tableEdgeGeo, t.id === "04" || t.id === "03" ? pinkEdgeMat : edgeMat)
+        new THREE.LineSegments(tableEdgeGeo, t.id === "04" || t.id === "03" ? brightEdgeMat : edgeMat)
       );
       tGroup.add(top);
 
@@ -208,7 +232,7 @@ export function ProblemChapter3D() {
 
       const lampGeo = new THREE.CylinderGeometry(0.14, 0.24, 0.18, 12);
       const lampMat = new THREE.MeshBasicMaterial({
-        color: t.id === "04" ? 0xffcdff : 0xffffff,
+        color: t.id === "04" ? 0xffffff : 0xd4d4d8,
       });
       const lamp = new THREE.Mesh(lampGeo, lampMat);
       lamp.position.y = 3.1;
@@ -252,7 +276,11 @@ export function ProblemChapter3D() {
     scene.add(chairInst);
 
     const staffGeo = new THREE.CapsuleGeometry(0.16, 0.85, 6, 12);
-    const staffMat = new THREE.MeshStandardMaterial({ color: 0xffcdff, roughness: 0.3 });
+    const staffMat = new THREE.MeshStandardMaterial({
+      color: 0xe4e4e7,
+      roughness: 0.22,
+      metalness: 0.65,
+    });
     const waiterA = new THREE.Mesh(staffGeo, staffMat);
     waiterA.position.set(-4.8, 0.7, -3.5);
     const waiterB = new THREE.Mesh(staffGeo, staffMat);
@@ -284,8 +312,8 @@ export function ProblemChapter3D() {
         el.style.opacity = "0";
         return;
       }
-      const xPct = Math.min(84, Math.max(16, (p.x * 0.5 + 0.5) * 100));
-      const yPct = Math.min(72, Math.max(24, (-p.y * 0.5 + 0.5) * 100));
+      const xPct = Math.min(82, Math.max(18, (p.x * 0.5 + 0.5) * 100));
+      const yPct = Math.min(70, Math.max(28, (-p.y * 0.5 + 0.5) * 100));
       el.style.opacity = "1";
       el.style.left = `${xPct.toFixed(1)}%`;
       el.style.top = `${yPct.toFixed(1)}%`;
@@ -334,11 +362,11 @@ export function ProblemChapter3D() {
         const t = (currentProg - 0.75) / 0.25;
         const ease = t * t * (3 - 2 * t);
         px = 0;
-        py = 8.2 + ease * 7.2;
-        pz = 5.8 * (1 - ease) + 0.02;
+        py = 8.2 + ease * 8.6;
+        pz = 5.8 * (1 - ease) + 0.05;
         lx = 0;
         ly = 0;
-        lz = 0;
+        lz = -1.25 * ease;
       }
 
       camera.position.set(px, py, pz);
@@ -346,7 +374,7 @@ export function ProblemChapter3D() {
       camera.updateMatrixWorld();
 
       wallLineMat.opacity =
-        currentProg > 0.7 ? Math.max(0.04, (1 - (currentProg - 0.7) / 0.3) * 0.14) : 0.14;
+        currentProg > 0.7 ? Math.max(0.05, (1 - (currentProg - 0.7) / 0.3) * 0.16) : 0.16;
 
       const showTags = currentProg < 0.88;
       projectTag(ptagT04Ref.current, tableWorldPos["04"], showTags);
@@ -471,7 +499,7 @@ export function ProblemChapter3D() {
             </div>
 
             <div className="problem-headline-block">
-              <span className="eyebrow-editorial" style={{ color: "var(--pink)", marginBottom: "0.5rem" }}>
+              <span className="eyebrow-editorial" style={{ marginBottom: "0.5rem" }}>
                 Chapter 01 // Dining Floor Blind Spots
               </span>
               <h1 className="serif-display problem-headline" id="problem-heading">
@@ -507,7 +535,7 @@ export function ProblemChapter3D() {
               <h2 className="sans-display" id="problem-step-title" style={{ fontSize: "1.15rem", marginTop: "0.35rem" }}>
                 {currentBeat.title}
               </h2>
-              <p className="body-copy" id="problem-step-desc" style={{ fontSize: "13px", marginTop: "0.4rem" }}>
+              <p style={{ fontSize: "13px", marginTop: "0.4rem", color: "rgba(255, 255, 255, 0.72)" }} id="problem-step-desc">
                 {currentBeat.desc}
               </p>
 
@@ -530,7 +558,7 @@ export function ProblemChapter3D() {
               </div>
             </div>
 
-            <SmartLink to="#chapter-simulation" className="btn btn--pink btn--sm">
+            <SmartLink to="#chapter-simulation" className="btn btn--chrome btn--sm">
               Enter Interactive Simulation &darr;
             </SmartLink>
           </div>

@@ -100,7 +100,6 @@ export function CapabilitiesScene() {
     };
   }, [recomputeTopology]);
 
-  // Kinetic heading rails
   useLayoutEffect(() => {
     const section = sectionRef.current;
     if (!section || reducedMotion) return;
@@ -108,17 +107,19 @@ export function CapabilitiesScene() {
     const ctx = gsap.context(() => {
       const leftRail = section.querySelector(".cap-rail-line--left");
       const rightRail = section.querySelector(".cap-rail-line--right");
+      const nodes = section.querySelectorAll(".cap-node");
+
       if (leftRail) {
         gsap.fromTo(
           leftRail,
-          { x: -48, opacity: 0.35 },
+          { x: -36, opacity: 0.4 },
           {
             x: 0,
             opacity: 1,
             scrollTrigger: {
               trigger: section,
               start: "top 85%",
-              end: "top 30%",
+              end: "top 35%",
               scrub: true,
             },
           }
@@ -127,15 +128,34 @@ export function CapabilitiesScene() {
       if (rightRail) {
         gsap.fromTo(
           rightRail,
-          { x: 48, opacity: 0.35 },
+          { x: 36, opacity: 0.4 },
           {
             x: 0,
             opacity: 1,
             scrollTrigger: {
               trigger: section,
               start: "top 85%",
-              end: "top 30%",
+              end: "top 35%",
               scrub: true,
+            },
+          }
+        );
+      }
+      if (nodes.length) {
+        gsap.fromTo(
+          nodes,
+          { y: 20, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.55,
+            stagger: 0.06,
+            ease: "power3.out",
+            clearProps: "transform",
+            scrollTrigger: {
+              trigger: ".cap-system-board",
+              start: "top 82%",
+              once: true,
             },
           }
         );
@@ -198,7 +218,7 @@ export function CapabilitiesScene() {
   return (
     <section
       ref={sectionRef}
-      className="capabilities-scene is-light-surface"
+      className="capabilities-scene"
       id="scene-capabilities"
       data-scene-index="04 | 08"
       aria-labelledby="cap-heading"
@@ -208,10 +228,10 @@ export function CapabilitiesScene() {
         <h2
           className="serif-display cap-kinetic-heading"
           id="cap-heading"
-          style={{ fontSize: "var(--text-3xl)", maxWidth: "15ch" }}
+          style={{ fontSize: "var(--text-3xl)", maxWidth: "16ch" }}
         >
           <span className="cap-rail-line cap-rail-line--left">SIX INTERCONNECTED</span>
-          <span className="cap-rail-line cap-rail-line--right">DISCIPLINES.</span>
+          <span className="cap-rail-line cap-rail-line--right text-chrome">DISCIPLINES.</span>
         </h2>
 
         <div className="cap-system-board" id="cap-system-board">
@@ -227,26 +247,27 @@ export function CapabilitiesScene() {
                   {topology.links.map((lnk) => (
                     <g key={lnk.id}>
                       <line
+                        className="cap-topology-line"
                         x1={topology.ax}
                         y1={topology.ay}
                         x2={lnk.tx}
                         y2={lnk.ty}
-                        stroke="#000000"
-                        strokeWidth="1.5"
-                        strokeDasharray="4 4"
-                        opacity="0.28"
+                        stroke="currentColor"
+                        strokeWidth="1.25"
+                        strokeDasharray="5 5"
+                        opacity="0.3"
                       />
                       <circle
                         cx={lnk.tx}
                         cy={lnk.ty}
-                        r="4"
-                        fill="#FFCDFF"
-                        stroke="#000000"
-                        strokeWidth="1.2"
+                        r="3.5"
+                        fill="#D4D4D8"
+                        stroke="currentColor"
+                        strokeWidth="1"
                       />
                     </g>
                   ))}
-                  <circle cx={topology.ax} cy={topology.ay} r="5" fill="#000000" />
+                  <circle cx={topology.ax} cy={topology.ay} r="5" fill="#FFFFFF" stroke="currentColor" strokeWidth="1.5" />
                 </>
               )}
             </svg>
@@ -289,28 +310,14 @@ export function CapabilitiesScene() {
               </p>
 
               <div className="cap-demo-box">
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontSize: "11px",
-                    color: "var(--pink)",
-                    marginBottom: "0.65rem",
-                  }}
-                >
+                <div className="cap-demo-box__head">
                   <span>SYSTEM DEMONSTRATION</span>
-                  <span>{demoExecuted ? "EXECUTED" : "STANDBY"}</span>
+                  <span className={demoExecuted ? "is-executed" : ""}>
+                    {demoExecuted ? "EXECUTED" : "STANDBY"}
+                  </span>
                 </div>
-                <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.68)", marginBottom: "0.5rem" }}>
-                  Before: {activeCap.demoBefore}
-                </p>
-                <p
-                  style={{
-                    fontSize: "13px",
-                    color: demoExecuted ? "#FFCDFF" : "#FFFFFF",
-                    fontWeight: 600,
-                  }}
-                >
+                <p className="cap-demo-box__before">Before: {activeCap.demoBefore}</p>
+                <p className={`cap-demo-box__after${demoExecuted ? " is-executed" : ""}`}>
                   {demoExecuted
                     ? `\u2713 ${activeCap.demoAfter}`
                     : `Click '${activeCap.demoAction}' to inspect transformation.`}
@@ -318,18 +325,7 @@ export function CapabilitiesScene() {
               </div>
 
               <div style={{ marginTop: "1rem" }}>
-                <span
-                  style={{
-                    display: "block",
-                    fontSize: "11px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    color: "var(--ink-light-dim)",
-                    marginBottom: "0.45rem",
-                  }}
-                >
-                  Connects Directly With:
-                </span>
+                <span className="cap-connects-label">Connects Directly With:</span>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
                   {linkedCapabilities.map((c) => (
                     <button
@@ -345,10 +341,10 @@ export function CapabilitiesScene() {
               </div>
             </div>
 
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "1.75rem" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.65rem", marginTop: "1.75rem" }}>
               <button
                 type="button"
-                className="btn btn--pink btn--sm"
+                className="btn btn--chrome btn--sm"
                 id="cap-run-demo"
                 onClick={() => setDemoExecuted(true)}
               >
@@ -356,7 +352,7 @@ export function CapabilitiesScene() {
               </button>
               <button
                 type="button"
-                className="btn btn--light-outline btn--sm"
+                className="btn btn--outline btn--sm"
                 id="cap-expand-env"
                 onClick={openSpatial}
               >
@@ -364,7 +360,7 @@ export function CapabilitiesScene() {
               </button>
               <button
                 type="button"
-                className="btn btn--light-outline btn--sm"
+                className="btn btn--outline btn--sm"
                 onClick={() => openWhatsApp(activeCap.whatsappText)}
               >
                 Discuss on WhatsApp
@@ -388,12 +384,12 @@ export function CapabilitiesScene() {
           >
             <div className="cap-spatial-panel">
               <div className="cap-spatial-header">
-                <span className="eyebrow-editorial" style={{ color: "var(--pink)", margin: 0 }}>
-                  WYNXSOL // CAPABILITY ENVIRONMENT // {activeCap.index}
+                <span className="eyebrow-editorial" style={{ margin: 0 }}>
+                  WYNX SOLUTIONS // CAPABILITY ENVIRONMENT // {activeCap.index}
                 </span>
                 <button
                   type="button"
-                  className="btn btn--dark-outline btn--sm"
+                  className="btn btn--outline btn--sm"
                   id="cap-spatial-close"
                   onClick={closeSpatial}
                 >
@@ -404,45 +400,27 @@ export function CapabilitiesScene() {
                 <div>
                   <h3
                     className="serif-display"
-                    style={{ fontSize: "clamp(2.2rem, 4.4vw, 3.6rem)", marginBottom: "1rem" }}
+                    style={{ fontSize: "clamp(2.1rem, 4.2vw, 3.4rem)", marginBottom: "1rem" }}
                   >
                     {activeCap.title}
                   </h3>
-                  <p className="body-copy" style={{ fontSize: "16px", maxWidth: "54ch" }}>
+                  <p style={{ fontSize: "16px", maxWidth: "54ch", color: "rgba(255, 255, 255, 0.72)", lineHeight: 1.55 }}>
                     {activeCap.summary}
                   </p>
                   <div
                     className="cap-demo-box"
-                    style={{ border: "1px solid var(--hairline-dark-strong)", marginTop: "1.75rem" }}
+                    style={{ border: "1px solid rgba(255, 255, 255, 0.18)", marginTop: "1.75rem" }}
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        fontSize: "11px",
-                        color: "var(--pink)",
-                        marginBottom: "0.75rem",
-                      }}
-                    >
+                    <div className="cap-demo-box__head">
                       <span>ARCHITECTURAL SIMULATION</span>
-                      <span>{demoExecuted ? "STATE: EXECUTED" : "STATE: STANDBY"}</span>
+                      <span className={demoExecuted ? "is-executed" : ""}>
+                        {demoExecuted ? "STATE: EXECUTED" : "STATE: STANDBY"}
+                      </span>
                     </div>
-                    <p
-                      style={{
-                        fontSize: "14px",
-                        color: "rgba(255,255,255,0.7)",
-                        marginBottom: "0.65rem",
-                      }}
-                    >
+                    <p className="cap-demo-box__before">
                       <strong>Baseline State:</strong> {activeCap.demoBefore}
                     </p>
-                    <p
-                      style={{
-                        fontSize: "14px",
-                        color: demoExecuted ? "#FFCDFF" : "#FFFFFF",
-                        fontWeight: 600,
-                      }}
-                    >
+                    <p className={`cap-demo-box__after${demoExecuted ? " is-executed" : ""}`}>
                       {demoExecuted
                         ? `\u2713 ${activeCap.demoAfter}`
                         : "Run demonstration to simulate system execution."}
@@ -451,7 +429,7 @@ export function CapabilitiesScene() {
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "1.25rem" }}>
                     <button
                       type="button"
-                      className="btn btn--pink btn--sm"
+                      className="btn btn--chrome btn--sm"
                       id="cap-spatial-run-demo"
                       onClick={() => setDemoExecuted(true)}
                     >
@@ -459,7 +437,7 @@ export function CapabilitiesScene() {
                     </button>
                     <button
                       type="button"
-                      className="btn btn--dark-outline btn--sm"
+                      className="btn btn--outline btn--sm"
                       onClick={() => openWhatsApp(activeCap.whatsappText)}
                     >
                       Discuss on WhatsApp
@@ -467,18 +445,7 @@ export function CapabilitiesScene() {
                   </div>
                 </div>
                 <div>
-                  <span
-                    style={{
-                      display: "block",
-                      fontSize: "11px",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.09em",
-                      color: "var(--text-white-dim)",
-                      marginBottom: "0.85rem",
-                    }}
-                  >
-                    Connected System Topology
-                  </span>
+                  <span className="cap-spatial-topo-title">Connected System Topology</span>
                   <div style={{ display: "grid", gap: "0.65rem" }}>
                     {linkedCapabilities.map((c) => (
                       <button
@@ -487,14 +454,7 @@ export function CapabilitiesScene() {
                         className="cap-spatial-node-btn"
                         onClick={() => handleSelectCapability(c.id)}
                       >
-                        <span
-                          style={{
-                            display: "block",
-                            fontSize: "11px",
-                            color: "var(--pink)",
-                            letterSpacing: "0.08em",
-                          }}
-                        >
+                        <span className="cap-spatial-node-btn__idx">
                           {c.index} // CONNECTED MODULE
                         </span>
                         <span

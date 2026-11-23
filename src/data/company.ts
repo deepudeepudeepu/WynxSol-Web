@@ -1,7 +1,7 @@
 export interface PhilosophyPillar {
   id: string;
   word: string;
-  pink?: boolean;
+  accent?: boolean;
   tabLabel: string;
   description: string;
 }
@@ -36,7 +36,7 @@ export const PHILOSOPHY_PILLARS: PhilosophyPillar[] = [
   {
     id: "intelligence",
     word: "INTELLIGENCE.",
-    pink: true,
+    accent: true,
     tabLabel: "02 | 03 Intelligence",
     description:
       "Artificial intelligence, computer vision and autonomous logic engineered as dependable infrastructure.",

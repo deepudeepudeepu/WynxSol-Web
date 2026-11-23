@@ -1,5 +1,5 @@
 /* ============================================================================
-   WYNXSOL — BASE ARCHITECTURE, EDITORIAL TYPOGRAPHY & HAIRLINE SYSTEM
+   WYNX SOLUTIONS — BASE MONOCHROME ARCHITECTURE, TYPOGRAPHY & HAIRLINE SYSTEM
    ============================================================================ */
 
 *,
@@ -12,12 +12,13 @@
 
 html {
   font-size: 16px;
-  scroll-behavior: smooth;
-  background-color: var(--bg-black);
-  color: var(--text-white);
+  scroll-behavior: auto;
+  background-color: var(--surface-pitch);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: clip;
+  transition: background-color 0.5s var(--ease-out), color 0.5s var(--ease-out);
 }
 
 html.lenis,
@@ -36,25 +37,12 @@ html.lenis body {
 body {
   font-family: var(--font-sans);
   font-size: var(--text-base);
-  line-height: 1.5;
-  color: var(--text-white);
-  background-color: var(--bg-black);
+  line-height: 1.55;
+  color: var(--text-primary);
+  background-color: var(--surface-pitch);
   overflow-x: clip;
   min-height: 100vh;
-  transition: filter 0.35s ease;
-}
-
-body.is-inverted {
-  background-color: var(--surface-light);
-}
-
-body.is-inverted main,
-body.is-inverted .wynx-nav,
-body.is-inverted .wynx-hud-bottom,
-body.is-inverted .mobile-drawer,
-body.is-inverted .wynx-modal,
-body.is-inverted .cap-spatial-overlay {
-  filter: invert(1) hue-rotate(180deg);
+  transition: background-color 0.5s var(--ease-out), color 0.5s var(--ease-out);
 }
 
 h1,
@@ -62,59 +50,62 @@ h2,
 .serif-display {
   font-family: var(--font-display);
   font-weight: 300;
-  line-height: 0.88;
-  letter-spacing: -0.015em;
+  line-height: 0.94;
+  letter-spacing: -0.03em;
   color: inherit;
 }
 
 h3,
 h4,
 .sans-display {
-  font-family: var(--font-sans);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
 }
 
-.text-pink {
-  color: var(--pink);
+.text-chrome {
+  background: var(--chrome-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-accent {
+  color: var(--text-primary);
 }
 
 .eyebrow-editorial {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  gap: 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--text-white-dim);
-  margin-bottom: 1.1rem;
+  color: var(--text-muted);
+  margin-bottom: 1.15rem;
 }
 
-.is-light-surface .eyebrow-editorial {
-  color: var(--ink-light-dim);
+.eyebrow-editorial::before {
+  content: "";
+  width: 16px;
+  height: 1px;
+  background: var(--chrome-mid);
+  opacity: 0.72;
 }
 
 .lead-copy {
   font-size: var(--text-lg);
-  color: var(--text-white-muted);
-  line-height: 1.42;
+  color: var(--text-secondary);
+  line-height: 1.48;
   max-width: 50ch;
 }
 
-.is-light-surface .lead-copy {
-  color: var(--ink-light-muted);
-}
-
 .body-copy {
-  color: var(--text-white-muted);
-  line-height: 1.55;
-}
-
-.is-light-surface .body-copy {
-  color: var(--ink-light-muted);
+  color: var(--text-secondary);
+  line-height: 1.62;
 }
 
 a {
@@ -137,7 +128,7 @@ svg {
 }
 
 :focus-visible {
-  outline: 2px solid var(--pink);
+  outline: 1.5px solid var(--text-primary);
   outline-offset: 3px;
 }
 
@@ -147,11 +138,11 @@ svg {
   left: 16px;
   z-index: var(--z-cursor);
   padding: 0.65rem 1.2rem;
-  background: var(--pink);
-  color: var(--pink-ink);
+  background: var(--text-primary);
+  color: var(--accent-ink);
   font-size: 12px;
   font-weight: 600;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-xs);
   transition: top 0.2s ease;
 }
 
@@ -168,12 +159,60 @@ svg {
   z-index: 2;
 }
 
+/* Subtle Monochrome Architectural Hairline Grid Overlay */
+.arch-grid-guides {
+  position: fixed;
+  inset: 0;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  pointer-events: none;
+  z-index: var(--z-hairlines);
+}
+
+.arch-grid-guides span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--hairline);
+  opacity: 0.55;
+}
+
+.arch-grid-guides span:nth-child(1) {
+  left: var(--gutter);
+}
+
+.arch-grid-guides span:nth-child(2) {
+  left: 25%;
+}
+
+.arch-grid-guides span:nth-child(3) {
+  left: 62.5%;
+}
+
+.arch-grid-guides span:nth-child(4) {
+  right: var(--gutter);
+}
+
+@media (max-width: 900px) {
+  .arch-grid-guides span:nth-child(2),
+  .arch-grid-guides span:nth-child(3) {
+    display: none;
+  }
+}
+
+.line-mask {
+  display: block;
+  overflow: hidden;
+  overflow: clip;
+}
+
 /* ============================================================================
-   CORNER HUDS
+   CORNER HUDS (MONOCHROME CHROME PILLS)
    ============================================================================ */
 .wynx-hud-bottom {
   position: fixed;
-  bottom: 16px;
+  bottom: 14px;
   left: var(--gutter);
   right: var(--gutter);
   display: flex;
@@ -181,59 +220,78 @@ svg {
   align-items: center;
   pointer-events: none;
   z-index: var(--z-hud);
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.08em;
 }
 
-.wynx-hud-bottom button,
-.wynx-hud-bottom > span {
+.wynx-hud-right {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
+}
+
+.wynx-hud-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.48rem;
   padding: 5px 11px;
   border-radius: var(--radius-pill);
-  background: rgba(10, 10, 14, 0.84);
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(12, 12, 14, 0.84);
+  color: #E4E4E7;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: border-color 0.25s ease, color 0.25s ease, background-color 0.25s ease, transform 0.25s var(--ease-out);
 }
 
-.wynx-hud-bottom button {
+html[data-surface-mode="light"] .wynx-hud-pill {
+  background: rgba(255, 255, 255, 0.88);
+  color: #09090B;
+  border-color: rgba(9, 9, 11, 0.18);
+}
+
+.wynx-hud-pill--btn {
   pointer-events: auto;
-  text-transform: lowercase;
+  text-transform: uppercase;
+  font-size: 10px;
 }
 
-.wynx-hud-bottom button:hover {
-  border-color: var(--pink);
-  color: var(--pink);
+.wynx-hud-pill--btn:hover {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
+  transform: translateY(-1px);
 }
 
-.wynx-hud-bottom button::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
+.wynx-hud-orbit {
+  width: 11px;
+  height: 11px;
+  display: inline-block;
+  flex-shrink: 0;
+  transition: transform 0.55s var(--ease-out);
+}
+
+.wynx-hud-pill--btn:hover .wynx-hud-orbit {
+  transform: rotate(180deg);
 }
 
 /* ============================================================================
-   CONNECTED SPATIAL PAGE TRANSITION CURTAIN
+   CONNECTED SPATIAL PAGE TRANSITION CURTAIN (PURE BLACK & CHROME)
    ============================================================================ */
 .page-curtain {
   position: fixed;
   inset: 0;
   z-index: var(--z-curtain);
-  background: var(--bg-black);
+  background: #000000;
   pointer-events: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 0.9rem;
   clip-path: inset(0 50% 0 50%);
-  transition: clip-path 0.55s var(--ease-expo);
+  transition: clip-path 0.52s var(--ease-expo);
 }
 
 .page-curtain.is-entering {
@@ -241,53 +299,92 @@ svg {
   pointer-events: auto;
 }
 
+.page-curtain__logo {
+  width: 60px;
+  height: auto;
+  filter: saturate(0) contrast(1.1);
+}
+
 .page-curtain__mark {
   font-family: var(--font-display);
-  font-weight: 300;
-  font-size: clamp(2.2rem, 6vw, 4.4rem);
-  color: var(--pink);
+  font-weight: 500;
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #FFFFFF 0%, #D4D4D8 45%, #71717A 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .page-curtain__sub {
+  font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--text-white-dim);
+  color: rgba(255, 255, 255, 0.62);
 }
 
 /* ============================================================================
-   MINIMAL CURSOR DOT (DESKTOP POINTERS ONLY)
+   PRECISION DUAL-LAYER CURSOR (MONOCHROME)
    ============================================================================ */
-.wynx-cursor {
+.wynx-cursor-dot,
+.wynx-cursor-ring {
   position: fixed;
   top: 0;
   left: 0;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid transparent;
-  mix-blend-mode: difference;
   pointer-events: none;
   z-index: var(--z-cursor);
-  transform: translate3d(-100px, -100px, 0);
-  transition: width 0.28s var(--ease-expo), height 0.28s var(--ease-expo), background-color 0.2s ease, border-color 0.2s ease, opacity 0.25s ease;
   opacity: 0;
+  transform: translate3d(-120px, -120px, 0);
 }
 
-.wynx-cursor.is-visible {
+.wynx-cursor-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  mix-blend-mode: difference;
+  transition: opacity 0.22s ease;
+}
+
+.wynx-cursor-ring {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(161, 161, 170, 0.52);
+  transition:
+    width 0.3s var(--ease-out),
+    height 0.3s var(--ease-out),
+    border-color 0.25s ease,
+    background-color 0.25s ease,
+    opacity 0.22s ease;
+}
+
+.wynx-cursor-dot.is-visible {
   opacity: 1;
 }
 
-.wynx-cursor.is-hovering {
-  width: 28px;
-  height: 28px;
-  background: transparent;
-  border-color: #FFFFFF;
+.wynx-cursor-ring.is-visible {
+  opacity: 0.85;
+}
+
+.wynx-cursor-ring.is-hovering {
+  width: 44px;
+  height: 44px;
+  border-color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.05);
+  opacity: 1;
+}
+
+html[data-surface-mode="light"] .wynx-cursor-ring.is-hovering {
+  border-color: rgba(9, 9, 11, 0.72);
+  background: rgba(9, 9, 11, 0.04);
 }
 
 @media (pointer: coarse), (hover: none), (max-width: 900px), (prefers-reduced-motion: reduce) {
-  .wynx-cursor {
+  .wynx-cursor-dot,
+  .wynx-cursor-ring {
     display: none !important;
   }
 }

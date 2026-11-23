@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { WYNXSOL_CONFIG } from "../../config/wynxsol";
@@ -9,59 +9,52 @@ gsap.registerPlugin(ScrollTrigger);
 export function FoundersScene() {
   const reducedMotion = useReducedMotion();
   const sectionRef = useRef<HTMLElement | null>(null);
+  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
-    if (!section || reducedMotion || window.innerWidth <= 640) return;
+    if (!section || reducedMotion) return;
 
     const ctx = gsap.context(() => {
-      const leftItem = section.querySelector(".founder-editorial-item--left");
-      const centerItems = section.querySelectorAll(".founder-editorial-item--center");
-      const rightItem = section.querySelector(".founder-editorial-item--right");
-      if (leftItem) {
+      const frames = section.querySelectorAll(".founder-portrait-frame");
+      const metaBlocks = section.querySelectorAll(".founder-meta");
+
+      if (frames.length) {
         gsap.fromTo(
-          leftItem,
-          { x: 28, opacity: 0.35 },
+          frames,
+          { clipPath: "inset(100% 0% 0% 0%)", opacity: 0.4 },
           {
-            x: 0,
+            clipPath: "inset(0% 0% 0% 0%)",
             opacity: 1,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: "power3.out",
+            clearProps: "clipPath",
             scrollTrigger: {
-              trigger: section,
-              start: "top 85%",
-              end: "top 35%",
-              scrub: true,
+              trigger: ".founders-gallery",
+              start: "top 82%",
+              once: true,
             },
           }
         );
       }
-      if (centerItems.length) {
+
+      if (metaBlocks.length) {
         gsap.fromTo(
-          centerItems,
-          { y: 24, opacity: 0.35 },
+          metaBlocks,
+          { y: 18, opacity: 0 },
           {
             y: 0,
             opacity: 1,
+            duration: 0.65,
+            stagger: 0.1,
+            delay: 0.15,
+            ease: "power3.out",
+            clearProps: "transform",
             scrollTrigger: {
-              trigger: section,
-              start: "top 85%",
-              end: "top 35%",
-              scrub: true,
-            },
-          }
-        );
-      }
-      if (rightItem) {
-        gsap.fromTo(
-          rightItem,
-          { x: -28, opacity: 0.35 },
-          {
-            x: 0,
-            opacity: 1,
-            scrollTrigger: {
-              trigger: section,
-              start: "top 85%",
-              end: "top 35%",
-              scrub: true,
+              trigger: ".founders-gallery",
+              start: "top 82%",
+              once: true,
             },
           }
         );
@@ -82,69 +75,61 @@ export function FoundersScene() {
       aria-labelledby="founders-heading"
     >
       <div className="container">
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-            gap: "1.5rem",
-          }}
-        >
+        <div className="founders-header-row">
           <div>
             <span className="eyebrow-editorial">07 // The Founders</span>
             <h2 className="serif-display" id="founders-heading" style={{ fontSize: "var(--text-3xl)" }}>
               LEADERSHIP.
             </h2>
           </div>
-          <span
-            style={{
-              fontSize: "12px",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "var(--pink)",
-            }}
-          >
-            Pakistan &amp; International Delivery
-          </span>
+          <div className="founders-header-aside">
+            <span className="founders-region-tag">Pakistan &amp; International Delivery</span>
+            <p className="body-copy" style={{ fontSize: "13px", maxWidth: "36ch" }}>
+              Engineering leadership driving AI systems, computer vision, and bespoke software
+              infrastructure.
+            </p>
+          </div>
         </div>
 
-        <div className="founders-split">
-          {WYNXSOL_CONFIG.founders.map((founder, idx) => {
-            const posClass =
-              idx === 0
-                ? "founder-editorial-item--left"
-                : idx === WYNXSOL_CONFIG.founders.length - 1
-                ? "founder-editorial-item--right"
-                : "founder-editorial-item--center";
+        <div className="founders-gallery">
+          {WYNXSOL_CONFIG.founders.map((founder) => {
+            const imgFailed = Boolean(failedImages[founder.id]);
+            const photoVars = {
+              "--photo-pos": founder.photoPosition,
+              "--photo-scale": String(founder.photoScale),
+            } as CSSProperties;
 
             return (
-              <article key={founder.id} className={`founder-editorial-item ${posClass}`}>
-                <div className="founder-monogram-box">
-                  <span>{founder.initials}</span>
-                  <span>Portrait Slot</span>
+              <article key={founder.id} className="founder-card">
+                <div className="founder-portrait-frame">
+                  {!imgFailed ? (
+                    <img
+                      src={founder.photoPath}
+                      alt={`${founder.name}, ${founder.role} at Wynx Solutions`}
+                      className="founder-portrait-img"
+                      style={photoVars}
+                      loading="lazy"
+                      decoding="async"
+                      onError={() =>
+                        setFailedImages((prev) => ({
+                          ...prev,
+                          [founder.id]: true,
+                        }))
+                      }
+                    />
+                  ) : (
+                    <div className="founder-portrait-fallback" aria-hidden="true">
+                      <span>{founder.initials}</span>
+                    </div>
+                  )}
+                  <span className="founder-portrait-index" aria-hidden="true">
+                    {founder.index}
+                  </span>
                 </div>
-                <div className="founder-kinetic-meta" style={{ minWidth: 0 }}>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.1em",
-                      color: "var(--pink)",
-                      marginBottom: "0.35rem",
-                    }}
-                  >
-                    {founder.role}
-                  </div>
-                  <h3
-                    className="serif-display"
-                    style={{
-                      fontSize: "clamp(1.45rem, 2.1vw, 2.3rem)",
-                      overflowWrap: "break-word",
-                    }}
-                  >
-                    {founder.name}
-                  </h3>
+
+                <div className="founder-meta">
+                  <div className="founder-role">{founder.role}</div>
+                  <h3 className="serif-display founder-name">{founder.name}</h3>
                 </div>
               </article>
             );

@@ -25,6 +25,7 @@ interface NavigationContextValue {
   curtainState: CurtainState;
   navigateWithCurtain: (to: string, customLabel?: string) => void;
   scrollToHash: (rawHash: string) => void;
+  scrollToTop: () => void;
   stopScroll: () => void;
   startScroll: () => void;
   registerHudSync: (fn: () => void) => () => void;
@@ -42,8 +43,10 @@ function normalizeRoutePath(path: string): string {
 function getCurtainLabel(to: string, customLabel?: string): string {
   if (customLabel) return customLabel;
   if (to.includes("restaurant-ai")) return "ENTERING RESTAURANT INTELLIGENCE";
-  if (to.includes("#contact")) return "GOING TO CONTACT";
-  return "RETURNING TO COMPANY";
+  if (to.includes("#contact")) return "NAVIGATING TO CONTACT";
+  if (to.includes("#scene-capabilities")) return "NAVIGATING TO CAPABILITIES";
+  if (to.includes("#scene-process")) return "NAVIGATING TO PROCESS";
+  return "RETURNING TO WYNX SOLUTIONS";
 }
 
 export function NavigationProvider({ children }: { children: ReactNode }) {
@@ -68,6 +71,10 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const triggerHudSync = useCallback(() => {
+    hudSyncFnsRef.current.forEach((fn) => fn());
+  }, []);
+
   useEffect(() => {
     if (reducedMotion) {
       if (lenisRef.current) {
@@ -78,7 +85,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     }
 
     const lenis = new Lenis({
-      duration: 1.15,
+      duration: 1.1,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
     });
@@ -86,6 +93,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
 
     const onLenisScroll = () => {
       ScrollTrigger.update();
+      triggerHudSync();
     };
     lenis.on("scroll", onLenisScroll);
 
@@ -104,7 +112,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
         lenisRef.current = null;
       }
     };
-  }, [reducedMotion]);
+  }, [reducedMotion, triggerHudSync]);
 
   const stopScroll = useCallback(() => {
     lenisRef.current?.stop();
@@ -121,32 +129,45 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const triggerHudSync = useCallback(() => {
-    hudSyncFnsRef.current.forEach((fn) => fn());
-  }, []);
-
-  const scrollToHash = useCallback((rawHash: string) => {
-    if (!rawHash || rawHash === "#") {
-      if (lenisRef.current) {
-        lenisRef.current.scrollTo(0, { duration: 1.0 });
-      } else {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-      return;
-    }
-
-    const cleanId = rawHash.replace(/^#/, "");
-    const targetEl = document.getElementById(cleanId);
-    if (!targetEl) return;
-
-    ScrollTrigger.refresh();
-
+  const scrollToTop = useCallback(() => {
     if (lenisRef.current) {
-      lenisRef.current.scrollTo(targetEl, { offset: 0, duration: 1.15 });
+      lenisRef.current.scrollTo(0, { duration: 1.0, force: true });
     } else {
-      targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
     }
-  }, []);
+  }, [reducedMotion]);
+
+  const scrollToHash = useCallback(
+    (rawHash: string) => {
+      const cleanId = rawHash ? rawHash.replace(/^#/, "") : "";
+
+      // Always land at exact y=0 opening hero when targeting Company or empty hash
+      if (!cleanId || cleanId === "company" || cleanId === "scene-opening") {
+        scrollToTop();
+        return;
+      }
+
+      const performScroll = () => {
+        ScrollTrigger.refresh(true);
+        const targetEl = document.getElementById(cleanId);
+        if (!targetEl) return;
+
+        const targetY = Math.max(0, Math.round(targetEl.getBoundingClientRect().top + window.scrollY));
+        if (lenisRef.current) {
+          lenisRef.current.scrollTo(targetY, { duration: 1.05, force: true });
+        } else {
+          window.scrollTo({ top: targetY, behavior: reducedMotion ? "auto" : "smooth" });
+        }
+      };
+
+      window.requestAnimationFrame(() => {
+        performScroll();
+        // Re-verify once sticky/WebGL heights settle after cross-page mount
+        window.setTimeout(performScroll, 220);
+      });
+    },
+    [reducedMotion, scrollToTop]
+  );
 
   // Sync scroll position on route or hash changes
   useEffect(() => {
@@ -156,18 +177,18 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
 
     if (pathChanged) {
       if (lenisRef.current) {
-        lenisRef.current.scrollTo(0, { immediate: true });
+        lenisRef.current.scrollTo(0, { immediate: true, force: true });
       }
       window.scrollTo(0, 0);
     }
 
     const scrollTimer = window.setTimeout(() => {
-      ScrollTrigger.refresh();
+      ScrollTrigger.refresh(true);
       if (location.hash) {
         scrollToHash(location.hash);
       }
       triggerHudSync();
-    }, 120);
+    }, pathChanged ? 160 : 80);
 
     return () => {
       window.clearTimeout(scrollTimer);
@@ -221,8 +242,8 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
         navigate(nextDestination);
         hideCurtainTimerRef.current = window.setTimeout(() => {
           setCurtainState((prev) => ({ ...prev, visible: false }));
-        }, 120);
-      }, 360);
+        }, 160);
+      }, 340);
     },
     [location.pathname, location.hash, navigate, reducedMotion, scrollToHash]
   );
@@ -239,6 +260,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       curtainState,
       navigateWithCurtain,
       scrollToHash,
+      scrollToTop,
       stopScroll,
       startScroll,
       registerHudSync,
@@ -248,6 +270,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       curtainState,
       navigateWithCurtain,
       scrollToHash,
+      scrollToTop,
       stopScroll,
       startScroll,
       registerHudSync,

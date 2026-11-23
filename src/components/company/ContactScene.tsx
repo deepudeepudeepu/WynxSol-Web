@@ -3,7 +3,9 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { WYNXSOL_CONFIG } from "../../config/wynxsol";
 import { useMeeting } from "../../context/MeetingContext";
+import { useNavigation } from "../../context/NavigationContext";
 import { useWhatsApp } from "../../context/WhatsAppContext";
+import { useMagnetic } from "../../hooks/useMagnetic";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import { sendAutomaticEmail, type EmailDeliveryResult } from "../../utils/emailDelivery";
 import { SmartLink } from "../shell/SmartLink";
@@ -23,10 +25,11 @@ export function ContactScene() {
   const reducedMotion = useReducedMotion();
   const { openWhatsApp } = useWhatsApp();
   const { openMeetingModal } = useMeeting();
+  const { scrollToTop } = useNavigation();
 
   const sectionRef = useRef<HTMLElement | null>(null);
-  const crossMaskRef = useRef<HTMLDivElement | null>(null);
   const emailCopyTimerRef = useRef<number | null>(null);
+  const bookBtnRef = useMagnetic<HTMLButtonElement>(3);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -61,40 +64,27 @@ export function ContactScene() {
 
   useLayoutEffect(() => {
     const section = sectionRef.current;
-    const crossMask = crossMaskRef.current;
-    if (!section || !crossMask || reducedMotion) return;
+    if (!section || reducedMotion) return;
 
     const ctx = gsap.context(() => {
-      const bars = crossMask.querySelectorAll("span");
-      const contactLines = section.querySelectorAll(".contact-line-3d");
-
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: section,
-          start: "top 95%",
-          end: "top 22%",
-          scrub: true,
-        },
-      });
-
-      tl.fromTo(crossMask, { opacity: 0.98 }, { opacity: 0.98, duration: 0.45 }, 0).to(
-        crossMask,
-        { opacity: 0, duration: 0.55 },
-        0.45
-      );
-
-      if (bars[0]) {
-        tl.fromTo(bars[0], { scaleX: 0.004 }, { scaleX: 1, duration: 0.72, ease: "power2.out" }, 0);
-      }
-      if (bars[1]) {
-        tl.fromTo(bars[1], { scaleY: 0.004 }, { scaleY: 1, duration: 0.72, ease: "power2.out" }, 0);
-      }
-      if (contactLines.length) {
-        tl.fromTo(
-          contactLines,
-          { rotateX: -48, y: 26, opacity: 0.2 },
-          { rotateX: 0, y: 0, opacity: 1, stagger: 0.12, duration: 0.5, ease: "power2.out" },
-          0.35
+      const lines = section.querySelectorAll(".contact-reveal-line");
+      if (lines.length) {
+        gsap.fromTo(
+          lines,
+          { yPercent: 105, opacity: 0 },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 0.72,
+            stagger: 0.1,
+            ease: "power3.out",
+            clearProps: "transform",
+            scrollTrigger: {
+              trigger: section,
+              start: "top 78%",
+              once: true,
+            },
+          }
         );
       }
     }, sectionRef);
@@ -130,11 +120,11 @@ export function ContactScene() {
       return;
     }
 
-    const briefText = `Hi WynxSol, I'd like to discuss a project.\nName: ${trimmedName}\nEmail: ${trimmedEmail}\nCompany: ${trimmedCompany}\nDetails: ${trimmedDesc}`;
+    const briefText = `Hi Wynx Solutions, I'd like to discuss a project.\nName: ${trimmedName}\nEmail: ${trimmedEmail}\nCompany: ${trimmedCompany}\nDetails: ${trimmedDesc}`;
 
     setIsSubmitting(true);
     const result = await sendAutomaticEmail({
-      subject: `[WynxSol Inquiry] ${trimmedCompany} — ${trimmedName}`,
+      subject: `[Wynx Solutions Inquiry] ${trimmedCompany} — ${trimmedName}`,
       fromName: trimmedName,
       replyTo: trimmedEmail,
       fields: {
@@ -153,23 +143,22 @@ export function ContactScene() {
   return (
     <section
       ref={sectionRef}
-      className="contact-scene is-light-surface"
+      className="contact-scene"
       id="contact"
       data-scene-index="08 | 08"
       aria-labelledby="contact-heading"
     >
       <span id="scene-contact" style={{ position: "absolute", top: 0, left: 0 }} aria-hidden="true" />
-      <div ref={crossMaskRef} className="contact-cross-mask" id="contact-cross-mask" aria-hidden="true">
-        <span />
-        <span />
-      </div>
 
       <div className="container contact-scene__inner">
         <span className="eyebrow-editorial">08 // Contact</span>
         <h2 className="contact-headline" id="contact-heading">
-          <span className="contact-line-3d">LET&apos;S BUILD</span>
-          <br />
-          <span className="contact-line-3d">WHAT&apos;S NEXT.</span>
+          <span className="line-mask">
+            <span className="contact-reveal-line">LET&apos;S BUILD</span>
+          </span>
+          <span className="line-mask">
+            <span className="contact-reveal-line text-chrome">WHAT&apos;S NEXT.</span>
+          </span>
         </h2>
 
         <div className="contact-grid">
@@ -193,7 +182,7 @@ export function ContactScene() {
                 </div>
                 <button
                   type="button"
-                  className="btn btn--light-outline btn--sm"
+                  className="btn btn--outline btn--sm"
                   id="contact-copy-email"
                   onClick={handleCopyEmail}
                 >
@@ -204,8 +193,9 @@ export function ContactScene() {
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem" }}>
               <button
+                ref={bookBtnRef}
                 type="button"
-                className="btn btn--pink"
+                className="btn btn--chrome"
                 id="contact-book-meeting-btn"
                 onClick={() => openMeetingModal()}
               >
@@ -213,7 +203,7 @@ export function ContactScene() {
               </button>
               <button
                 type="button"
-                className="btn btn--light-outline"
+                className="btn btn--outline"
                 onClick={() => openWhatsApp()}
               >
                 Contact Us on WhatsApp
@@ -294,20 +284,11 @@ export function ContactScene() {
               </span>
             </div>
 
-            <button type="submit" className="btn btn--light-outline" disabled={isSubmitting}>
+            <button type="submit" className="btn btn--outline" disabled={isSubmitting}>
               {isSubmitting ? "Sending Inquiry..." : "Send Inquiry & Prepare Brief"}
             </button>
 
-            <div
-              id="form-result-box"
-              hidden={!latestBrief}
-              style={{
-                marginTop: "1rem",
-                padding: "1rem",
-                border: "1px solid var(--ink-light)",
-                background: "#FFFFFF",
-              }}
-            >
+            <div id="form-result-box" className="form-result-box" hidden={!latestBrief}>
               {deliveryResult && (
                 <div
                   id="contact-delivery-status"
@@ -331,7 +312,7 @@ export function ContactScene() {
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.55rem" }}>
                 <button
                   type="button"
-                  className="btn btn--pink btn--sm"
+                  className="btn btn--chrome btn--sm"
                   id="btn-send-brief-wa"
                   onClick={() => {
                     if (latestBrief) openWhatsApp(latestBrief);
@@ -341,9 +322,9 @@ export function ContactScene() {
                 </button>
                 <a
                   href={`mailto:${WYNXSOL_CONFIG.contactEmail}?subject=${encodeURIComponent(
-                    `WynxSol Project Brief — ${company.trim()}`
+                    `Wynx Solutions Project Brief — ${company.trim()}`
                   )}&body=${encodeURIComponent(latestBrief)}`}
-                  className="btn btn--light-outline btn--sm"
+                  className="btn btn--outline btn--sm"
                   id="btn-send-brief-email"
                 >
                   Open in Email App
@@ -355,32 +336,43 @@ export function ContactScene() {
       </div>
 
       <footer className="footer-monolith">
-        <div className="footer-wordmark" aria-hidden="true">
-          WYNXSOL
-        </div>
-        <div
-          className="container"
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "1rem",
-            fontSize: "12px",
-            color: "var(--text-white-dim)",
-          }}
-        >
-          <span>&copy; 2026 WynxSol. Intelligence, Engineered.</span>
-          <a
-            href={`mailto:${WYNXSOL_CONFIG.contactEmail}`}
-            id="footer-email-link"
-            style={{ color: "var(--text-white-muted)", textDecoration: "underline" }}
-          >
-            {WYNXSOL_CONFIG.contactEmail}
-          </a>
-          <SmartLink to="/restaurant-ai" className="text-pink">
-            Enter Restaurant Intelligence Simulation &rarr;
-          </SmartLink>
+        <div className="container">
+          <div className="footer-brand-lockup" aria-hidden="true">
+            <img src={WYNXSOL_CONFIG.logoAssetPath} alt="" className="footer-logo-mark" />
+            <div className="footer-wordmark">WYNX SOLUTIONS</div>
+          </div>
+
+          <div className="footer-meta-bar">
+            <div className="footer-nav-links">
+              <SmartLink to="/#company">Company</SmartLink>
+              <SmartLink to="/#scene-capabilities">Capabilities</SmartLink>
+              <SmartLink to="/#scene-process">Process</SmartLink>
+              <SmartLink to="/restaurant-ai">Restaurant Intelligence &rarr;</SmartLink>
+            </div>
+
+            <div className="footer-meta-right">
+              <a
+                href={`mailto:${WYNXSOL_CONFIG.contactEmail}`}
+                id="footer-email-link"
+                className="footer-email-link"
+              >
+                {WYNXSOL_CONFIG.contactEmail}
+              </a>
+              <button
+                type="button"
+                className="btn btn--outline btn--sm"
+                id="footer-back-to-top"
+                onClick={scrollToTop}
+              >
+                &uarr; Back to Top
+              </button>
+            </div>
+          </div>
+
+          <div className="footer-legal">
+            <span>&copy; 2026 Wynx Solutions. Intelligence, Engineered.</span>
+            <span>Pakistan &amp; International Delivery</span>
+          </div>
         </div>
       </footer>
     </section>

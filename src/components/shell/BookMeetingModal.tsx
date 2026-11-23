@@ -165,7 +165,7 @@ export function BookMeetingModal({
       <div className="wynx-modal__panel meeting-modal__panel">
         <div className="wynx-modal__head">
           <div>
-            <span className="eyebrow-editorial" style={{ marginBottom: "0.35rem", color: "var(--pink)" }}>
+            <span className="eyebrow-editorial" style={{ marginBottom: "0.35rem" }}>
               {confirmedBooking ? "Meeting Request Ready" : "Schedule Consultation"}
             </span>
             <h3 id="wynx-meeting-title" className="serif-display" style={{ fontSize: "clamp(1.75rem, 3vw, 2.25rem)" }}>
@@ -363,15 +363,15 @@ export function BookMeetingModal({
             </div>
 
             <div className="meeting-footer-actions">
-              <span style={{ fontSize: "12px", color: "var(--text-white-dim)" }}>
+              <span style={{ fontSize: "12px", color: "rgba(255, 255, 255, 0.64)" }}>
                 Host: {WYNXSOL_CONFIG.companyName} &middot;{" "}
-                <a href={`mailto:${WYNXSOL_CONFIG.contactEmail}`} className="text-pink">
+                <a href={`mailto:${WYNXSOL_CONFIG.contactEmail}`} style={{ color: "#FFFFFF", textDecoration: "underline" }}>
                   {WYNXSOL_CONFIG.contactEmail}
                 </a>
               </span>
               <button
                 type="submit"
-                className="btn btn--pink btn--sm"
+                className="btn btn--chrome btn--sm"
                 id="meeting-confirm-btn"
                 disabled={isSubmitting}
               >
@@ -452,7 +452,7 @@ export function BookMeetingModal({
                 href={buildGoogleCalendarUrl(confirmedBooking, WYNXSOL_CONFIG.contactEmail)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn--pink btn--sm"
+                className="btn btn--accent btn--sm"
                 id="meeting-gcal-btn"
               >
                 Add to Google Calendar

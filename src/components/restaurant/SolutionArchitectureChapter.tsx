@@ -3,6 +3,15 @@ import * as THREE from "three";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SOLUTION_LAYERS } from "../../data/restaurant";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
+import { createStudioChromeEnv } from "../../utils/threeStudioEnv";
+
+const LAYER_MATERIALS = [
+  { color: 0x0c0c0e, edge: 0x71717a, metal: 0.65, rough: 0.34 },
+  { color: 0xd4d4d8, edge: 0xffffff, metal: 0.96, rough: 0.12 },
+  { color: 0x27272a, edge: 0xe4e4e7, metal: 0.85, rough: 0.2 },
+  { color: 0xffffff, edge: 0xffffff, metal: 1.0, rough: 0.06 },
+  { color: 0x18181b, edge: 0xd4d4d8, metal: 0.88, rough: 0.18 },
+];
 
 export function SolutionArchitectureChapter() {
   const reducedMotion = useReducedMotion();
@@ -54,7 +63,10 @@ export function SolutionArchitectureChapter() {
     let renderer: THREE.WebGLRenderer | null = null;
     try {
       renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      const maxDpr = window.innerWidth <= 768 ? 1.5 : 2;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.22;
     } catch {
       return () => {
         st?.kill();
@@ -64,7 +76,12 @@ export function SolutionArchitectureChapter() {
     const activeRenderer = renderer;
     const disposables: Array<{ dispose: () => void }> = [];
 
+    const studioEnv = createStudioChromeEnv(activeRenderer);
+    disposables.push(studioEnv);
+
     const scene = new THREE.Scene();
+    scene.environment = studioEnv.envMap;
+
     const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 60);
     camera.position.set(5.4, 3.6, 6.2);
     camera.lookAt(0, 0, 0);
@@ -72,25 +89,29 @@ export function SolutionArchitectureChapter() {
     const root = new THREE.Group();
     scene.add(root);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.72));
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.35);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
     dirLight.position.set(5, 9, 6);
-    scene.add(dirLight);
+    const silverFill = new THREE.DirectionalLight(0xe4e4e7, 1.15);
+    silverFill.position.set(-5, 2, -4);
+    scene.add(dirLight, silverFill);
 
     const layerGroups: THREE.Group[] = [];
 
     const buildLayer = (idx: number) => {
       const g = new THREE.Group();
+      const spec = LAYER_MATERIALS[idx] || LAYER_MATERIALS[0];
       const basePlateGeo = new THREE.BoxGeometry(2.8, 0.12, 2.2);
       const baseEdgeGeo = new THREE.EdgesGeometry(basePlateGeo);
-      const baseMat = new THREE.MeshStandardMaterial({
-        color: idx % 2 === 0 ? 0x111115 : 0x222228,
-        roughness: 0.35,
-        metalness: 0.25,
+      const baseMat = new THREE.MeshPhysicalMaterial({
+        color: spec.color,
+        roughness: spec.rough,
+        metalness: spec.metal,
+        clearcoat: 0.72,
+        clearcoatRoughness: 0.12,
+        envMapIntensity: 1.55,
       });
-      const wireMat = new THREE.LineBasicMaterial({
-        color: idx === 1 || idx === 3 ? 0xffcdff : 0x000000,
-      });
+      const wireMat = new THREE.LineBasicMaterial({ color: spec.edge });
       disposables.push(basePlateGeo, baseEdgeGeo, baseMat, wireMat);
 
       const plate = new THREE.Mesh(basePlateGeo, baseMat);
@@ -99,7 +120,7 @@ export function SolutionArchitectureChapter() {
 
       if (idx === 0) {
         const coneGeo = new THREE.ConeGeometry(0.24, 0.42, 4);
-        const coneMat = new THREE.MeshBasicMaterial({ color: 0xffcdff, wireframe: true });
+        const coneMat = new THREE.MeshBasicMaterial({ color: 0xd4d4d8, wireframe: true });
         [
           [-0.85, -0.6],
           [0.85, -0.6],
@@ -112,7 +133,7 @@ export function SolutionArchitectureChapter() {
         });
         disposables.push(coneGeo, coneMat);
       } else if (idx === 1) {
-        const grid = new THREE.GridHelper(2.2, 6, 0xffcdff, 0x555566);
+        const grid = new THREE.GridHelper(2.2, 6, 0xffffff, 0x52525b);
         grid.position.y = 0.1;
         g.add(grid);
         disposables.push(grid.geometry);
@@ -124,14 +145,14 @@ export function SolutionArchitectureChapter() {
       } else if (idx === 2) {
         const ringG = new THREE.TorusGeometry(0.65, 0.035, 8, 32);
         ringG.rotateX(Math.PI / 2);
-        const ringM = new THREE.MeshBasicMaterial({ color: 0xffcdff });
+        const ringM = new THREE.MeshBasicMaterial({ color: 0xe4e4e7 });
         const ring = new THREE.Mesh(ringG, ringM);
         ring.position.y = 0.14;
         g.add(ring);
         disposables.push(ringG, ringM);
       } else if (idx === 3) {
         const orbGeo = new THREE.SphereGeometry(0.11, 12, 12);
-        const orbMat = new THREE.MeshBasicMaterial({ color: 0xffcdff });
+        const orbMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
         [-0.75, 0, 0.75].forEach((ox) => {
           const orb = new THREE.Mesh(orbGeo, orbMat);
           orb.position.set(ox, 0.18, 0);
@@ -140,7 +161,11 @@ export function SolutionArchitectureChapter() {
         disposables.push(orbGeo, orbMat);
       } else if (idx === 4) {
         const barGeo = new THREE.BoxGeometry(0.18, 0.34, 0.18);
-        const barMat = new THREE.MeshStandardMaterial({ color: 0xffcdff, roughness: 0.25 });
+        const barMat = new THREE.MeshStandardMaterial({
+          color: 0xf4f4f5,
+          roughness: 0.18,
+          metalness: 0.9,
+        });
         for (let b = 0; b < 5; b++) {
           const bar = new THREE.Mesh(barGeo, barMat);
           bar.position.set(-0.9 + b * 0.45, 0.23, 0);
@@ -165,14 +190,14 @@ export function SolutionArchitectureChapter() {
       new THREE.Vector3(0, 2.1, 0),
     ]);
     const conduitMat = new THREE.LineBasicMaterial({
-      color: 0x000000,
+      color: 0xa1a1aa,
       transparent: true,
-      opacity: 0.32,
+      opacity: 0.35,
     });
     root.add(new THREE.LineSegments(conduitGeo, conduitMat));
 
     const pulseGeo = new THREE.SphereGeometry(0.08, 10, 10);
-    const pulseMat = new THREE.MeshBasicMaterial({ color: 0xffcdff });
+    const pulseMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
     const dataPulse = new THREE.Mesh(pulseGeo, pulseMat);
     root.add(dataPulse);
     disposables.push(conduitGeo, conduitMat, pulseGeo, pulseMat);
@@ -256,7 +281,7 @@ export function SolutionArchitectureChapter() {
   return (
     <section
       ref={sectionRef}
-      className="solution-exploded-section is-light-surface"
+      className="solution-exploded-section"
       id="chapter-solution"
       data-scene-index="CH 03 | 03"
       aria-labelledby="solution-heading"
@@ -284,7 +309,7 @@ export function SolutionArchitectureChapter() {
 
           <button
             type="button"
-            className="btn btn--light-outline btn--sm"
+            className="btn btn--outline btn--sm"
             id="solution-assemble-btn"
             onClick={() => setIsAssembled((prev) => !prev)}
           >
