@@ -1,21 +1,30 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { WYNXSOL_CONFIG } from "../../config/wynxsol";
 import { useMeeting } from "../../context/MeetingContext";
 import { useNavigation } from "../../context/NavigationContext";
 import { useWhatsApp } from "../../context/WhatsAppContext";
 import { useMagnetic } from "../../hooks/useMagnetic";
 import { CustomCursor } from "./CustomCursor";
+import { LiquidChromeLoader } from "./LiquidChromeLoader";
 import { SmartLink } from "./SmartLink";
 
 export function AppLayout() {
   const location = useLocation();
-  const { curtainState, registerHudSync, scrollToTop } = useNavigation();
+  const { curtainState, registerHudSync, scrollToTop, stopScroll, startScroll } = useNavigation();
   const { openWhatsApp } = useWhatsApp();
   const { openMeetingModal } = useMeeting();
 
   const isRestaurantPage = location.pathname.startsWith("/restaurant-ai");
   const activePage = isRestaurantPage ? "restaurant-ai" : "company";
+
+  const [showInitialLoader, setShowInitialLoader] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("loaderT")) return true;
+    return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  });
 
   const [sceneCounter, setSceneCounter] = useState(
     activePage === "restaurant-ai" ? "CH 01 | 03" : "01 | 08"
@@ -106,6 +115,26 @@ export function AppLayout() {
   }, [drawerOpen, closeDrawer]);
 
   useEffect(() => {
+    if (!showInitialLoader) return;
+    stopScroll();
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+      startScroll();
+    };
+  }, [showInitialLoader, stopScroll, startScroll]);
+
+  const handleLoaderComplete = useCallback(() => {
+    document.documentElement.style.overflow = "";
+    document.body.style.overflow = "";
+    startScroll();
+    ScrollTrigger.refresh();
+    setShowInitialLoader(false);
+  }, [startScroll]);
+
+  useEffect(() => {
     if (isLightMode) {
       document.documentElement.dataset.surfaceMode = "light";
     } else {
@@ -119,6 +148,8 @@ export function AppLayout() {
 
   return (
     <>
+      {showInitialLoader && <LiquidChromeLoader onComplete={handleLoaderComplete} />}
+
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
