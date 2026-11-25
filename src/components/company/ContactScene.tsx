@@ -133,6 +133,7 @@ export function ContactScene() {
         Company: trimmedCompany,
         "Project Summary": trimmedDesc,
       },
+      fallbackHint: "Use Send via WhatsApp or Open in Email App below.",
     });
 
     setDeliveryResult(result);

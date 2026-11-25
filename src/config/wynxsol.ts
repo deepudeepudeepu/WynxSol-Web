@@ -39,10 +39,9 @@ export interface WynxsolConfig {
  *     whatsappNumber: "923001234567"
  *
  * AUTOMATIC EMAIL DELIVERY (100% FREE):
- *   Uses FormSubmit (`https://formsubmit.co/ajax/<contactEmail>`) by default
- *   with zero backend or API key required (click the one-time activation link
- *   sent to `contactEmail` on the first submission). Optionally set
- *   `web3formsAccessKey` to route via free Web3Forms instead.
+ *   Uses Web3Forms (`https://api.web3forms.com/submit`) when `web3formsAccessKey`
+ *   is configured, falling back to FormSubmit (`https://formsubmit.co/ajax/<contactEmail>`)
+ *   if no Web3Forms key is provided.
  */
 export const WYNXSOL_CONFIG: WynxsolConfig = {
   companyName: "WynxSol",
@@ -58,7 +57,7 @@ export const WYNXSOL_CONFIG: WynxsolConfig = {
   logoImagePath: "/assets/wynxsol-logo.jpg",
 
   contactEmail: "wynx.sol@gmail.com",
-  web3formsAccessKey: "",
+  web3formsAccessKey: "f13799e1-2724-423f-814c-fea860b1c4a3",
 
   founders: [
     {

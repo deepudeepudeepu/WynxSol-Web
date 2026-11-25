@@ -13,6 +13,7 @@ export interface SendAutomaticEmailOptions {
   fromName: string;
   replyTo: string;
   fields: Record<string, string>;
+  fallbackHint?: string;
 }
 
 export async function sendAutomaticEmail(
@@ -21,6 +22,7 @@ export async function sendAutomaticEmail(
   const contactEmail = WYNXSOL_CONFIG.contactEmail.trim();
   const web3formsKey = WYNXSOL_CONFIG.web3formsAccessKey.trim();
   const provider: "formsubmit" | "web3forms" = web3formsKey ? "web3forms" : "formsubmit";
+  const fallbackHint = options.fallbackHint?.trim() || "Use the WhatsApp or Email options below.";
 
   if (!contactEmail && !web3formsKey) {
     return {
@@ -31,7 +33,7 @@ export async function sendAutomaticEmail(
   }
 
   const controller = new AbortController();
-  const timeoutId = globalThis.setTimeout(() => controller.abort(), 12_000);
+  const timeoutId = globalThis.setTimeout(() => controller.abort(), 15_000);
 
   try {
     const endpoint = web3formsKey
@@ -43,8 +45,9 @@ export async function sendAutomaticEmail(
           access_key: web3formsKey,
           subject: options.subject,
           from_name: options.fromName,
+          email: options.replyTo,
           replyto: options.replyTo,
-          botcheck: "",
+          botcheck: false,
           ...options.fields,
         }
       : {
@@ -93,7 +96,7 @@ export async function sendAutomaticEmail(
       provider,
       message:
         (typeof data?.message === "string" && data.message) ||
-        "Automatic email delivery did not complete. Use Open Email Copy, Google Calendar, or WhatsApp below.",
+        `Automatic email delivery did not complete. ${fallbackHint}`,
     };
   } catch (err) {
     const isTimeout = err instanceof DOMException && err.name === "AbortError";
@@ -101,8 +104,8 @@ export async function sendAutomaticEmail(
       status: "error",
       provider,
       message: isTimeout
-        ? "Email notification request timed out. Use Open Email Copy, Google Calendar, or WhatsApp below."
-        : "Could not reach the automatic email service right now. Use Open Email Copy, Google Calendar, or WhatsApp below.",
+        ? `Email notification request timed out. ${fallbackHint}`
+        : `Could not reach the automatic email service right now. ${fallbackHint}`,
     };
   } finally {
     globalThis.clearTimeout(timeoutId);

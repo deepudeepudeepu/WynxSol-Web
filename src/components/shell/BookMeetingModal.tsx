@@ -136,6 +136,7 @@ export function BookMeetingModal({
         "Agenda / Notes": booking.notes || "—",
         "Add to Google Calendar (Host)": gcalUrl,
       },
+      fallbackHint: "Use Open Email Copy, Google Calendar, or Share via WhatsApp below.",
     });
 
     setDeliveryResult(result);
