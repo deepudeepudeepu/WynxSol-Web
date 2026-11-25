@@ -279,6 +279,7 @@ export function AppLayout() {
         aria-modal="true"
         aria-label="Mobile Navigation"
         aria-hidden={!drawerOpen}
+        data-lenis-prevent=""
       >
         <div className="mobile-drawer__head">
           <span

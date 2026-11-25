@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { WYNXSOL_CONFIG } from "../../config/wynxsol";
 import { useWhatsApp } from "../../context/WhatsAppContext";
 import { sendAutomaticEmail, type EmailDeliveryResult } from "../../utils/emailDelivery";
@@ -46,6 +46,7 @@ export function BookMeetingModal({
   onClose,
 }: BookMeetingModalProps) {
   const { openWhatsApp } = useWhatsApp();
+  const bodyRef = useRef<HTMLDivElement | null>(null);
 
   const upcomingDays = useMemo(() => getUpcomingBusinessDays(8), []);
   const tomorrowIso = useMemo(() => getTomorrowIsoDate(), []);
@@ -73,6 +74,12 @@ export function BookMeetingModal({
     setDeliveryResult(null);
     setConfirmedBooking(null);
   }, [sessionId, defaultTopic]);
+
+  useEffect(() => {
+    if (bodyRef.current) {
+      bodyRef.current.scrollTop = 0;
+    }
+  }, [open, sessionId, confirmedBooking]);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -159,6 +166,7 @@ export function BookMeetingModal({
       aria-modal="true"
       aria-labelledby="wynx-meeting-title"
       aria-hidden={!open}
+      data-lenis-prevent=""
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -184,7 +192,8 @@ export function BookMeetingModal({
           </button>
         </div>
 
-        {!confirmedBooking ? (
+        <div ref={bodyRef} className="meeting-modal__body" data-lenis-prevent="">
+          {!confirmedBooking ? (
           <form id="wynx-meeting-form" noValidate onSubmit={handleSubmit}>
             <div className="meeting-section">
               <span className="meeting-label">1. Meeting Topic</span>
@@ -495,6 +504,7 @@ export function BookMeetingModal({
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
